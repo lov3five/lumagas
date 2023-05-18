@@ -1,15 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, jsonify
+
+from app.routes import *
 
 app = Flask(__name__)
 
-
 # TEST
-@app.route('/test')
-def test():
-    return "Hello World"
+@app.route('/api/test', methods=['GET'])
+def hello():
+    return jsonify({'message': 'Hello, world!'})
 
-# GET Homepage
+# GET homepage LUMAGAS
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+
 

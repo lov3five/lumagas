@@ -56,6 +56,22 @@ def pretty_table(name_table, cursor, result):
     except Exception as e:
         print('Error: ' + str(e))
         
+def check_data_exist(name_table):
+    """Kiểm tra xem bảng có dữ liệu hay không.
+
+    Args:
+        name_table (str): Tên của bảng cần kiểm tra.
+
+    Returns:
+        bool: True nếu có dữ liệu, False nếu không có dữ liệu.
+
+    """
+    mycursor.execute("SELECT * FROM {}".format(name_table))
+    myresult = mycursor.fetchall()
+    if myresult == []:
+        return False
+    return True
+        
 # COURSES
 def get_all_courses(format=False):
     """ 
@@ -102,7 +118,7 @@ def delete_all_course():
         mycursor.execute(sql)
     except Exception as e:
         print('Error: ' + str(e))
-    connect.mydb.commit()
+    mydb.commit()
     print(mycursor.rowcount, "record(s) deleted")
         
 # CLASSES
@@ -113,7 +129,7 @@ def create_classes(course_id, room_id, timelesson_id, schedule_id):
         mycursor.execute(sql, val)
     except Exception as e:
         print('Error: ' + str(e))
-    connect.mydb.commit()
+    mydb.commit()
     print(mycursor.rowcount, "record inserted.")
     
 def delete_all_classes():
@@ -122,7 +138,7 @@ def delete_all_classes():
         mycursor.execute(sql)
     except Exception as e:
         print('Error: ' + str(e))
-    connect.mydb.commit()
+    mydb.commit()
     print(mycursor.rowcount, "record(s) deleted")
     
 def get_list_classes_by_schedule_id(schedule_id):
@@ -147,14 +163,13 @@ def get_list_classes_by_classroom_id(classroom_id):
 
 # SCHEDULES
 def create_new_schedule(fitness):
-    
     try:
         sql = "INSERT INTO schedules (fitness) VALUES (%s)"
         val = (fitness,)
         mycursor.execute(sql, val)
     except Exception as e:
         print('Error: ' + str(e))
-    connect.mydb.commit()
+    mydb.commit()
     print(mycursor.rowcount, "record inserted.")
     
 def get_schedule_id_newest():
@@ -165,3 +180,44 @@ def get_schedule_id_newest():
         return result[0]
     except Exception as e:
         print('Error: ' + str(e))
+
+# ROOMS 
+def create_room(name, capacity, type):
+    try:
+        sql = "INSERT INTO rooms (name, capacity, type) VALUES (%s, %s, %s)"
+        val = (name, capacity, type)
+        mycursor.execute(sql, val)
+    except Exception as e:
+        print('Error: ' + str(e))
+    mydb.commit()
+    print(mycursor.rowcount, "record inserted.")
+    
+
+def delete_all_room():
+    try:
+        sql = "DELETE FROM rooms"
+        mycursor.execute(sql)
+    except Exception as e:
+        print('Error: ' + str(e))
+    mydb.commit()
+    print(mycursor.rowcount, "record(s) deleted")
+
+# TIMELESSONS
+def create_timelesson(uuid, period):
+    try:
+        sql = "INSERT INTO timelessons (uuid, period) VALUES (%s, %s)"
+        val = (uuid, period)
+        mycursor.execute(sql, val)
+    except Exception as e:
+        print('Error: ' + str(e))
+    mydb.commit()
+    print(mycursor.rowcount, "record inserted.")
+    
+def delete_all_timelesson():
+    try:
+        sql = "DELETE FROM timelessons"
+        mycursor.execute(sql)
+    except Exception as e:
+        print('Error: ' + str(e))
+    mydb.commit()
+    print(mycursor.rowcount, "record(s) deleted")

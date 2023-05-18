@@ -8,19 +8,30 @@ sys.path.append(project_root)
 
 from db.service import get_list_data
 
-# IMPORT EXCEL FILE PROCESSING
-from excel.read_excel import read_course_data_input
-
 # IMPORT FLASK APP
 from app.app import app
 
+# GA
+from ga.ga import GA
+from ga.population import Population
+from utils import sound_notification, display_prettytable
+import time
 
-# Đọc tệp tin template.xlsx
-course_template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
-# ĐỌc tệp tin data_course_input.title
-course_df = pd.read_excel('./excel/data_input/course_test.xlsx')
+from prettytable import PrettyTable
+def main():
+    best_fitness = 0
+    
+    population_size = 80
+    
+    num_generations = 10000
+    
+    crossover_rate = 0.85 
+    
+    mutation_rate = 0.1 # 0.01 - 0.1
+    
+    elitism_rate = 0.1 
 
-read_course_data_input(course_template_df, course_df)
+
 
 
 

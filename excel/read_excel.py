@@ -3,13 +3,13 @@ from prettytable import PrettyTable
 
 from utils.print_column import print_list_one_column
 
-from db.service import create_course
+from db.service import create_course, create_classes, create_room, create_timelesson
 
-def read_course_data_input(template_df, df):
+# Đọc dữ liệu từ tệp tin Excel
+def check_file_data_input(template_df, df):
     # Trích xuất các tên cột từ tệp tin template
     expected_columns = list(template_df.columns)
     actual_columns = list(df.columns)
-
     # Tìm các cột không khớp với mẫu
     mismatched_columns = [column for column in expected_columns if column not in actual_columns]
 
@@ -22,11 +22,12 @@ def read_course_data_input(template_df, df):
             print("Các cột sau đây không tìm thấy:")
             column_error = 1
             print_list_one_column(mismatched_columns)
+            return False
         if extra_columns:
             print("Các cột sau đây là dư thừa:")
             column_error = 1
             print_list_one_column(extra_columns)
-
+            return False
     
     # Kiểm tra hàng có giá trị bị thiếu (NaN)
     if column_error == 0:
@@ -39,20 +40,54 @@ def read_course_data_input(template_df, df):
             for index, row in missing_rows.iterrows():
                 x.add_row([index + 2] + list(row))
             print(x)
+            print("Vui lòng kiểm tra lại tệp tin Excel.")
+            return False
+        else:
+            print("Tệp Excel hợp lệ.")
+            return True
+
+
+            
+# Đọc file course và lưu vào db
+def read_and_save_course_to_db(file_path):
+    # Đọc tệp tin template.xlsx
+    course_template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
+    # Đọc tệp tin data_course_input
+    course_df = pd.read_excel(file_path)
+
+    # Đọc dữ liệu từ tệp tin Excel
+    if course_df is not None:
+        if check_file_data_input(course_template_df, course_df):
+            expected_columns = list(course_template_df.columns)
+            # Thêm các danh sách các khóa học vào db
+            for index, row in course_df.iterrows():
+                create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]] ,row[expected_columns[6]])
     
+            
+#Đọc file rooms và lưu vào db
+def read_and_save_room_to_db(file_path):
+    # Đọc tệp tin template.xlsx
+    room_template_df = pd.read_excel('./app/static/file/templates/room_template.xlsx')
     
-    # Kiểm tra ràng buộc dữ liệu
-    # 'Số_lượng_sinh_viên' có giá trị âm hay không
-    negative_values = df[df['Số_lượng_sinh_viên'] < 0]
-    if not negative_values.empty:
-        print("Các hàng sau đây có 'Số_lượng_sinh_viên' là giá trị âm:")
-        x = PrettyTable()
-        x.field_names = ['STT'] + list(negative_values.columns)
-        for index, row in negative_values.iterrows():
-            x.add_row([index + 2] + list(row))
-        print(x)
+    # Đọc dữ liệu từ tệp Excel
+    room_df = pd.read_excel(file_path)
     
-    else:
-        print("Tệp Excel hợp lệ.")
-        for index, row in df.iterrows():
-            create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]], row[expected_columns[6]])
+    if room_df is not None and check_file_data_input(room_template_df, room_df):
+        expected_columns = list(room_template_df.columns)
+        # Thêm các danh sách các phòng học vào db
+        for index, row in room_df.iterrows():
+            create_room(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]])
+                
+def read_and_save_timelesson_to_db(file_path):
+    # Đọc tệp tin template.xlsx
+    timelesson_template_df = pd.read_excel('./app/static/file/templates/timelesson_template.xlsx')
+    
+    # Đọc dữ liệu từ tệp Excel
+    timelesson_df = pd.read_excel(file_path)
+
+    if timelesson_df is not None and check_file_data_input(timelesson_template_df, timelesson_df):
+        expected_columns = list(timelesson_template_df.columns)
+        print(expected_columns)
+        # Thêm các danh sách các thời gian học vào db
+        for index, row in timelesson_df.iterrows():
+            create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
