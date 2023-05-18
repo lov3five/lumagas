@@ -1,0 +1,47 @@
+# Các file và thư mục được tạo ra khi chạy code
+__pycache__/
+*.pyc
+
+# Các file được tạo ra bởi hệ thống, không nên đưa vào git
+*.DS_Store
+venv
+# Các thư mục virtual environment
+venv/
+env/
+ENV/
+.env
+
+# Các file và thư mục liên quan đến IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Các file log, cache, data
+*.log
+*.swp
+*.swo
+*.cache
+*.data
+*.db
+*.sqlite
+
+# Các file chứa credentials hoặc thông tin riêng tư
+config.ini
+credentials.ini
+*.key
+*.pem
+
+# Các file build và dist
+build/
+dist/
+*.egg-info/
+*.egg/
+*.pyz
+*.pywz
+*.pyc
+
+# Các file liên quan đến testing
+.tox/
+.coverage
+
+mysql/
