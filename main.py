@@ -9,18 +9,8 @@ sys.path.append(project_root)
 # IMPORT FLASK APP
 from app.app import app
 
-# GA
-import time
-
-from ga.ga import GA
-from ga.population import Population
-from utils.display_prettytable import display_result
-from utils.sound_notification import sound_notification
-from db.service import get_all_courses
-
-
 from prettytable import PrettyTable
-def main():
+def main_ga():
     best_fitness = 0
     # xác định dân số ban đầu của quần thể
     population_size = 80
@@ -70,5 +60,4 @@ def main():
 if __name__ == '__main__':
     main()
     app.run()
-
     #
