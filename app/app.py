@@ -59,7 +59,6 @@ def run_genetic_algorithm():
         list_conflict_of_schedule.append(schedule.get_conflict())
         list_fitness_of_schedule.append(schedule.get_fitness())
 
-        
     x = PrettyTable()
     x.field_names = ["Schedule ID", "Conflict", "Fitness"]
     for i in range(0, len(list_conflict_of_schedule)):
