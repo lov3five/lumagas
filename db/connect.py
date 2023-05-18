@@ -1,3 +1,4 @@
+import os
 from db.mysql_helper import connect_to_mysql
 from dotenv import load_dotenv
 load_dotenv()
