@@ -14,7 +14,7 @@ from db.service import get_all_courses
 
 # API khởi chạy GA
 #@app.route('/api/start-ga', methods['POST'])
-@app.route('/api/start-ga', methods['GET'])
+@app.route('/api/start-ga', methods=['GET'])
 def run_genetic_algorithm():
     # Lấy các thông số chạy GA từ yêu cầu POST
     #data = request.get_json()
