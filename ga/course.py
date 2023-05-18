@@ -1,6 +1,7 @@
 class Course:
-    def __init__(self, course_id, classroom_id, instructor_id, instructor_name, subject_id, subject_name, max_students):
+    def __init__(self, course_id, course_name, classroom_id, instructor_id, instructor_name, subject_id, subject_name, max_students):
         self.course_id = course_id
+        self.course_name = course_name
         self.max_students = max_students
         self.instructor_id = instructor_id
         self.instructor_name = instructor_name
@@ -14,6 +15,12 @@ class Course:
     
     def set_course_id(self, course_id):
         self.course_id = course_id
+        
+    def get_course_name(self):
+        return self.course_name
+    
+    def set_course_name(self, course_name):
+        self.course_name = course_name
     
     def get_max_students(self):
         return self.max_students
@@ -52,12 +59,12 @@ class Course:
         self.classroom_id = classroom_id
     
     def __str__(self):
-        return "Course: " + self.course_id + " | " + "Instructor: " + self.instructor_name + " | " + "Subject: " + self.subject_name + " | " + "Classroom: " + self.classroom_id
+        return "Course: " + self.course_name + " | " + "Instructor: " + self.instructor_name + " | " + "Subject: " + self.subject_name + " | " + "Classroom: " + self.classroom_id
 
 
 # Hàm khởi tạo danh sách các khóa học
 def init_courses(courses_db):
     courses = []
     for course in courses_db:
-        courses.append(Course(course[0], course[1], course[2], course[3], course[4], course[5], course[6]))
+        courses.append(Course(course[0], course[1], course[2], course[3], course[4], course[5], course[6], course[7]))
     return courses

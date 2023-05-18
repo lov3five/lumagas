@@ -81,7 +81,7 @@ def get_all_courses(format=False):
     """
     try:
         sql = """ 
-            select c.name as "course_id", c.classroom_id as "classroom_id", c.instructor_id as "instructor_id", c.instructor_name as "instructor_name", c.subject_id as "subject_id", 
+            select c.id as "course_id",c.name as "course_name", c.classroom_id as "classroom_id", c.instructor_id as "instructor_id", c.instructor_name as "instructor_name", c.subject_id as "subject_id", 
             c.subject_name as "subject_name", c.max_number_of_students as "max_students"
             from courses c 
         """
@@ -109,7 +109,7 @@ def create_course(name, classroom_id, instructor_id, instructor_name, subject_id
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record inserted.")
+    print(mycursor.rowcount, "record inserted to COURSES.")
     
 def delete_all_course():
     try:
@@ -118,18 +118,18 @@ def delete_all_course():
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record(s) deleted")
+    print(mycursor.rowcount, "record(s) deleted from COURSES")
         
 # CLASSES
 def create_classes(course_id, room_id, timelesson_id, schedule_id):
     try:
-        sql = "INSERT INTO classes (course_id, room_id, timelesson_id, schedule_id) VALUES (%s, %s, %s, %s, %s)"
-        val = (id, course_id, room_id, timelesson_id, schedule_id)
+        sql = "INSERT INTO classes (course_id, room_id, timelesson_id, schedule_id) VALUES (%s, %s, %s, %s)"
+        val = (course_id, room_id, timelesson_id, schedule_id)
         mycursor.execute(sql, val)
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record inserted.")
+    print(mycursor.rowcount, "record inserted to CLASSES.")
     
 def delete_all_classes():
     try:
@@ -138,7 +138,7 @@ def delete_all_classes():
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record(s) deleted")
+    print(mycursor.rowcount, "record(s) deleted from CLASSES")
     
 def get_list_classes_by_schedule_id(schedule_id):
     try:
@@ -146,9 +146,28 @@ def get_list_classes_by_schedule_id(schedule_id):
         val = (schedule_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
-        return get_list_data(myresult, mycursor)
+        return myresult
     except Exception as e:
         print('Error: ' + str(e))
+        
+def get_list_classes_by_schedule_id_newest():
+    try:
+        schedule_id_newest = get_schedule_id_newest()
+        print(schedule_id_newest)
+        sql = """SELECT c2.name, c2.subject_name, c2.classroom_id, 
+        c2.instructor_name , r.name, t.period
+                FROM classes c
+                JOIN courses c2 on c.course_id = c2.id 
+                JOIN rooms r on c.room_id = r.id 
+                JOIN timelessons t on c.timelesson_id = t.id  
+                WHERE schedule_id = %s"""
+        val = (schedule_id_newest,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
         
 def get_list_classes_by_classroom_id(classroom_id):
     try:
@@ -156,29 +175,39 @@ def get_list_classes_by_classroom_id(classroom_id):
         val = (classroom_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
-        return get_list_data(myresult, mycursor)
+        return myresult
     except Exception as e:
         print('Error: ' + str(e))
 
 # SCHEDULES
-def create_new_schedule(fitness):
+def create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate):
     try:
-        sql = "INSERT INTO schedules (fitness) VALUES (%s)"
-        val = (fitness,)
+        sql = "INSERT INTO schedules (fitness, running_time, population_size, mutation_rate, crossover_rate) VALUES (%s, %s, %s, %s, %s)"
+        val = (fitness ,running_time, population_size, mutation_rate, crossover_rate)
         mycursor.execute(sql, val)
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record inserted.")
+    print(mycursor.rowcount, "record inserted to SCHEDULES.")
     
 def get_schedule_id_newest():
     try:
         sql = "SELECT id FROM schedules ORDER BY id DESC LIMIT 1"
         mycursor.execute(sql)
-        result = mycursor.fetchone()
-        return result[0]
+        myresult = mycursor.fetchall()
+        return myresult[0][0]
     except Exception as e:
         print('Error: ' + str(e))
+        
+def delete_schedule_by_id(schedule_id):
+    try:
+        sql = "DELETE FROM schedules WHERE id = %s"
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+    except Exception as e:
+        print('Error: ' + str(e))
+    mydb.commit()
+    print(mycursor.rowcount, "record(s) deleted from SCHEDULES")
 
 # ROOMS 
 def create_room(name, capacity, type):
@@ -189,7 +218,7 @@ def create_room(name, capacity, type):
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record inserted.")
+    print(mycursor.rowcount, "record inserted to ROOMS.")
     
 
 def delete_all_room():
@@ -199,7 +228,7 @@ def delete_all_room():
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record(s) deleted")
+    print(mycursor.rowcount, "record(s) deleted from ROOMS")
 
 # TIMELESSONS
 def create_timelesson(uuid, period):
@@ -210,7 +239,7 @@ def create_timelesson(uuid, period):
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record inserted.")
+    print(mycursor.rowcount, "record inserted to TIMELESSONS.")
     
 def delete_all_timelesson():
     try:
@@ -219,7 +248,7 @@ def delete_all_timelesson():
     except Exception as e:
         print('Error: ' + str(e))
     mydb.commit()
-    print(mycursor.rowcount, "record(s) deleted")
+    print(mycursor.rowcount, "record(s) deleted from TIMELESSONS")
     
 courses_db = get_all_courses()
 rooms_db = get_list_data('rooms')
