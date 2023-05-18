@@ -1,6 +1,4 @@
-from db import timelessons_db
-from db import rooms_db
-from db import courses_db
+from db.service import courses_db, rooms_db, timelessons_db
 
 from ga.course import init_courses
 from ga.room import init_rooms

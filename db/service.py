@@ -16,7 +16,6 @@ def get_list_data(name_table, format=False):
     """
     mycursor.execute("SELECT * FROM {}".format(name_table))
     myresult = mycursor.fetchall()
-    mycursor.close()
     if myresult == []:
         print(name_table + ' no data!!!')
         return
@@ -221,3 +220,11 @@ def delete_all_timelesson():
         print('Error: ' + str(e))
     mydb.commit()
     print(mycursor.rowcount, "record(s) deleted")
+    
+courses_db = get_all_courses()
+rooms_db = get_list_data('rooms')
+timelessons_db = get_list_data('timelessons')
+def courses_per_resource(courses, rooms, time_lessons):
+    return ("courses_per_resource: {} / {}".format(len(courses), len(rooms) * len(time_lessons)))
+
+info_ga = courses_per_resource(courses_db, rooms_db, timelessons_db)
