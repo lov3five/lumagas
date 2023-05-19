@@ -6,6 +6,9 @@ app = Flask(__name__)
 # IMPORT DB SERVICE
 from db.service import *
 
+# Lấy đường dẫn gốc của dự án
+project_root = os.path.dirname(os.path.abspath(__file__))
+
 #TEST
 @app.route('/api/test', methods=['GET'])
 def hello():
@@ -127,7 +130,7 @@ app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
 import pandas as pd
-from excel.read_excel import check_file_data_input, save_file_upload_to_db, read_and_save_course_to_db
+from excel.read_excel import check_file_data_input, save_file_upload_to_db
 from excel.config_api_template import check_api_and_select_template_to_compare
 
 # Kiểm tra file có đúng định dạng không
@@ -179,11 +182,8 @@ def upload_file(type_data):
             filename = secure_filename(file.filename)
             unique_filename = get_unique_filename(filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-            
-            file_path = "/excel/data_input/" + unique_filename
-            print('================', file_path)
-            if type_data == 'course':
-                read_and_save_course_to_db(file_path)
+            # Lưu file vào database
+            save_file_upload_to_db(type_data, template_df, df)
             
             return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
         else: 
