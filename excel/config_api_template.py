@@ -1,3 +1,4 @@
+import pandas as pd
 def check_api_and_select_template_to_compare(type_data):
     """
     Kiểm tra loại dữ liệu và chọn mẫu tương ứng để so sánh.
