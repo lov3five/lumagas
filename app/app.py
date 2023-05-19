@@ -129,11 +129,13 @@ app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 import pandas as pd
 from excel.read_excel import check_file_data_input
 from excel.config_api_template import check_api_and_select_template_to_compare
-# API upload file excel COURSE
+
+# Kiểm tra file có đúng định dạng không
 def allowed_file(filename):
     return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-            
+
+# Tạo tên file mới nếu trùng tên file đã có trong thư mục upload
 def get_unique_filename(filename):
     base, ext = os.path.splitext(filename)
     counter = 1
@@ -148,7 +150,7 @@ def get_unique_filename(filename):
         counter += 1
     return new_filename
 
-
+# API upload file excel support 3 object course, room, timelesson
 @app.route('/api/upload/<type_data>', methods=['POST'])
 def upload_file(type_data):
     # Kiểm tra xem request POST có chứa phần file không
