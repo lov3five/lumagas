@@ -20,14 +20,16 @@ def check_file_data_input(template_df, df):
         print("Tệp tin Excel không khớp với mẫu.")
         if mismatched_columns:
             print("Các cột sau đây không tìm thấy:")
+            error_msg = 'Các cột sau đây không giống với mẫu: ' + ', '.join(str(x) for x in mismatched_columns)
             column_error = 1
             print_list_one_column(mismatched_columns)
-            return False
+            return False, error_msg
         if extra_columns:
             print("Các cột sau đây là dư thừa:")
+            error_msg = 'Các cột sau đây là dư thừa: ' + ', '.join(str(x) for x in extra_columns)
             column_error = 1
             print_list_one_column(extra_columns)
-            return False
+            return False, error_msg
     
     # Kiểm tra hàng có giá trị bị thiếu (NaN)
     if column_error == 0:
@@ -35,16 +37,18 @@ def check_file_data_input(template_df, df):
         missing_rows = df[missing_values > 0]
         if not missing_rows.empty:
             print("Các hàng sau đây có giá trị bị thiếu:")
+            error_msg = 'Các hàng sau đây có giá trị bị thiếu: ' + ', '.join(str(x) for x in missing_rows)
             x = PrettyTable()
             x.field_names = ['STT'] + list(missing_rows.columns)
             for index, row in missing_rows.iterrows():
                 x.add_row([index + 2] + list(row))
             print(x)
             print("Vui lòng kiểm tra lại tệp tin Excel.")
-            return False
+            return False, error_msg
         else:
             print("Tệp Excel hợp lệ.")
-            return True
+            valid_msg = 'Tệp Excel hợp lệ.'
+            return True, valid_msg
 
 
             

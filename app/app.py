@@ -1,5 +1,6 @@
-from flask import Flask, render_template, jsonify, request
-
+import os
+from flask import Flask, flash, request, redirect, url_for, jsonify, render_template, send_from_directory
+from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # IMPORT DB SERVICE
@@ -25,11 +26,30 @@ from utils.sound_notification import sound_notification
 from prettytable import PrettyTable
 
 # TEST API
+""" GET """
 @app.route('/api/test', methods=['GET'])
 def test():
     return jsonify({'result': 'success'}), 200
 
-# API khởi chạy GA
+# API get list of schedule best fitness from database
+from db.service import get_list_classes_by_schedule_id_newest
+
+@app.route('/api/schedule', methods=['GET'])
+def get_schedules():
+    result = get_list_classes_by_schedule_id_newest()
+    schedule = []
+    for i in range(0, len(result)):
+        schedule.append({
+            'maHocPhan': result[i][0],
+            'tenHocPhan': result[i][1],
+            'tenLopHoc': result[i][2],
+            'tenGiangVien': result[i][3],
+            'tenPhongHoc': result[i][4],
+            'thoiGianHoc': result[i][5],
+        })
+    return jsonify({'result': schedule}), 200
+
+# API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
 @app.route('/api/start-ga', methods=['GET'])
 def run_genetic_algorithm():
@@ -91,28 +111,96 @@ def run_genetic_algorithm():
             course_id = population_result[0].get_classes()[i].get_course().get_course_id()
             room_id = population_result[0].get_classes()[i].get_room().get_room_id()
             timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
-            print(course_id, room_id, timelesson_id, schedule_id)
             create_classes(course_id, room_id, timelesson_id, schedule_id)
         # Nếu các classes không lưu vào db, xóa schedule vừa lưu
         if get_list_classes_by_schedule_id(schedule_id) == []:
             delete_schedule_by_id(schedule_id)
         return jsonify({'result': 'success'}), 200
+    
+""" POST """
+### UPLOAD FILE EXCEL
+INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
+OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
+ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
 
-# API get list of schedule best fitness from database
-from db.service import get_list_classes_by_schedule_id_newest
+app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
+app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
-@app.route('/api/schedules', methods=['GET'])
-def get_schedules():
-    result = get_list_classes_by_schedule_id_newest()
-    print(result)
-    schedule = []
-    for i in range(0, len(result)):
-        schedule.append({
-            'maHocPhan': result[i][0],
-            'tenHocPhan': result[i][1],
-            'tenLopHoc': result[i][2],
-            'tenGiangVien': result[i][3],
-            'tenPhongHoc': result[i][4],
-            'thoiGianHoc': result[i][5],
-        })
-    return jsonify({'result': schedule}), 200
+import pandas as pd
+from excel.read_excel import check_file_data_input
+# API upload file excel COURSE
+def allowed_file(filename):
+    return '.' in filename and \
+            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+            
+def get_unique_filename(filename):
+    base, ext = os.path.splitext(filename)
+    counter = 1
+    new_filename = filename  # Đặt giá trị mặc định cho new_filename
+    # Nếu filename chưa có trong thư mục upload thì giữ nguyên
+    if not os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], new_filename)):
+        return new_filename
+    while True:
+        new_filename = "{}_{}{}".format(base, counter, ext)
+        if not os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], new_filename)):
+            break
+        counter += 1
+    return new_filename
+
+@app.route('/api/upload/course', methods=['POST'])
+def upload_file_course():
+    # Kiểm tra xem request POST có chứa phần file không
+    if 'file' not in request.files:
+        return jsonify({'result': 'Không có tệp từ yêu cầu'}), 400
+    
+    file = request.files['file']
+    # Nếu người dùng không chọn file, trình duyệt gửi file trống không có tên file
+    if file.filename == '':
+        return jsonify({'result': 'Không có tệp nào được chọn để tải lên'}), 400
+    
+    if len(request.files.getlist('file')) != 1:
+        return jsonify({'result': 'Vui lòng chỉ tải lên một tệp'}), 400
+    
+    # Nếu file tồn tại và có phần mở rộng hợp lệ
+    if request.method == 'POST' and file and allowed_file(file.filename):
+        # Đọc file mẫu
+        template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
+        df = pd.read_excel(file)
+        # Kiểm tra file đầu vào và trả lỗi 
+        is_valid, error_data = check_file_data_input(df, template_df)
+        # is_valid = True | False
+        if is_valid: 
+            # Lưu file vào thư mục
+            filename = secure_filename(file.filename)
+            unique_filename = get_unique_filename(filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
+        else: 
+            if error_data is not None:
+                return jsonify({'result': error_data}), 400
+            else:
+                return jsonify({'result': 'Tệp không hợp lệ'}), 400
+    else: 
+        return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
+            
+# # API upload file excel ROOM
+# @app.route('/api/upload/room', methods=['POST'])
+
+# # API upload file excel TIMELESSON
+# @app.route('/api/upload/timelesson', methods=['POST'])
+
+# API download file
+@app.route('/api/download/<filename>', methods=['GET'])
+def download_file(filename):
+    # Kiểm tra xem file có tồn tại trong thư mục UPLOAD_FOLDER không
+    if os.path.isfile(os.path.join(app.config['DOWNLOAD_FOLDER'], filename)):
+        return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
+    else:
+        return jsonify({'result': 'File not found'}), 404
+
+
+
+
+""" DELETE """
+""" PUT """
+""" PATCH """
