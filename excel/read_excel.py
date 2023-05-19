@@ -95,3 +95,13 @@ def read_and_save_timelesson_to_db(file_path):
         # Thêm các danh sách các thời gian học vào db
         for index, row in timelesson_df.iterrows():
             create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
+            
+def save_file_upload_to_db(type_data, file_path):
+    if type_data == 'course':
+        read_and_save_course_to_db(file_path)
+    elif type_data == 'room':
+        read_and_save_room_to_db(file_path)
+    elif type_data == 'timelesson':
+        read_and_save_timelesson_to_db(file_path)
+    else:
+        print('Không tìm thấy loại dữ liệu.')

@@ -47,7 +47,7 @@ def get_schedules():
             'tenPhongHoc': result[i][4],
             'thoiGianHoc': result[i][5],
         })
-    return jsonify({'result': schedule}), 200
+    return jsonify({'result': schedule, 'data': result}), 200
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
@@ -94,7 +94,7 @@ def run_genetic_algorithm():
     end_time = time.time()
     print("Time: ", end_time - start_time)
     if ga.get_population()[0].get_conflict() == 0 :
-        sound_notification()
+        #sound_notification()
         population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
         print('Best schedule fitness: ', population_result[0].get_fitness())
         display_result(population_result)
@@ -127,7 +127,7 @@ app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
 import pandas as pd
-from excel.read_excel import check_file_data_input
+from excel.read_excel import check_file_data_input, save_file_upload_to_db, read_and_save_course_to_db
 from excel.config_api_template import check_api_and_select_template_to_compare
 
 # Kiểm tra file có đúng định dạng không
@@ -179,6 +179,12 @@ def upload_file(type_data):
             filename = secure_filename(file.filename)
             unique_filename = get_unique_filename(filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            
+            file_path = "/excel/data_input/" + unique_filename
+            print('================', file_path)
+            if type_data == 'course':
+                read_and_save_course_to_db(file_path)
+            
             return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
         else: 
             if error_data is not None:
@@ -187,6 +193,7 @@ def upload_file(type_data):
                 return jsonify({'result': 'Tệp không hợp lệ'}), 400
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
+
             
 # # API upload file excel ROOM
 # @app.route('/api/upload/room', methods=['POST'])
@@ -202,8 +209,6 @@ def download_file(filename):
         return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
-
-
 
 
 """ DELETE """
