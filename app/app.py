@@ -128,6 +128,7 @@ app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
 import pandas as pd
 from excel.read_excel import check_file_data_input
+from excel.config_api_template import check_api_and_select_template_to_compare
 # API upload file excel COURSE
 def allowed_file(filename):
     return '.' in filename and \
@@ -147,44 +148,9 @@ def get_unique_filename(filename):
         counter += 1
     return new_filename
 
-# @app.route('/api/upload/course', methods=['POST'])
-# def upload_file_course():
-#     # Kiểm tra xem request POST có chứa phần file không
-#     if 'file' not in request.files:
-#         return jsonify({'result': 'Không có tệp từ yêu cầu'}), 400
-    
-#     file = request.files['file']
-#     # Nếu người dùng không chọn file, trình duyệt gửi file trống không có tên file
-#     if file.filename == '':
-#         return jsonify({'result': 'Không có tệp nào được chọn để tải lên'}), 400
-    
-#     if len(request.files.getlist('file')) != 1:
-#         return jsonify({'result': 'Vui lòng chỉ tải lên một tệp'}), 400
-    
-#     # Nếu file tồn tại và có phần mở rộng hợp lệ
-#     if request.method == 'POST' and file and allowed_file(file.filename):
-#         # Đọc file mẫu
-#         template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
-#         df = pd.read_excel(file)
-#         # Kiểm tra file đầu vào và trả lỗi 
-#         is_valid, error_data = check_file_data_input(df, template_df)
-#         # is_valid = True | False
-#         if is_valid: 
-#             # Lưu file vào thư mục
-#             filename = secure_filename(file.filename)
-#             unique_filename = get_unique_filename(filename)
-#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-#             return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
-#         else: 
-#             if error_data is not None:
-#                 return jsonify({'result': error_data}), 400
-#             else:
-#                 return jsonify({'result': 'Tệp không hợp lệ'}), 400
-#     else: 
-#         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
 
-@app.route('/api/upload/<file_type>', methods=['POST'])
-def upload_file(file_type):
+@app.route('/api/upload/<type_data>', methods=['POST'])
+def upload_file(type_data):
     # Kiểm tra xem request POST có chứa phần file không
     if 'file' not in request.files:
         return jsonify({'result': 'Không có tệp từ yêu cầu'}), 400
@@ -198,15 +164,10 @@ def upload_file(file_type):
         return jsonify({'result': 'Vui lòng chỉ tải lên một tệp'}), 400
     
     if request.method == 'POST' and file and allowed_file(file.filename):
-        # Đọc file mẫu dựa trên loại tệp
-        if file_type == 'course':
-            template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
-        elif file_type == 'room':
-            template_df = pd.read_excel('./app/static/file/templates/room_template.xlsx')
-        elif file_type == 'timelesson':
-            template_df = pd.read_excel('./app/static/file/templates/timelesson_template.xlsx')
-        else:
-            return jsonify({'result': 'Không hỗ trợ upload cho loại tệp này'}), 400
+        # Đọc file mẫu dựa trên loại dữ liệu
+        template_df = check_api_and_select_template_to_compare(type_data)
+        if template_df is None:
+            return jsonify({'result': 'Loại dữ liệu không hợp lệ'}), 400
         df = pd.read_excel(file)
         # Kiểm tra file đầu vào và trả lỗi 
         is_valid, error_data = check_file_data_input(df, template_df)
