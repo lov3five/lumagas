@@ -3,7 +3,7 @@ from prettytable import PrettyTable
 
 from utils.print_column import print_list_one_column
 
-from db.service import create_course, create_room, create_timelesson, delete_all_course, delete_all_room, delete_all_timelesson, get_all_courses, get_list_timelessons, get_list_rooms
+from db.service import create_course, create_room, create_timelesson, delete_all_course, delete_all_room, delete_all_timelesson, get_list_courses, get_list_timelessons, get_list_rooms
 
 # Đọc dữ liệu từ tệp tin Excel
 def check_file_data_input(template_df, df):
@@ -58,7 +58,8 @@ def read_and_save_course_to_db(template_df, df):
     course_template_df = template_df
     # Đọc tệp tin data_course_input
     course_df = df
-    if get_all_courses() != []:
+    print(get_list_courses())
+    if get_list_courses() != []:
         delete_all_course()
     # Đọc dữ liệu từ tệp tin Excel
     if course_df is not None:
