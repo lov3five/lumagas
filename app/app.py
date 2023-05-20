@@ -115,7 +115,7 @@ def run_genetic_algorithm():
         elitism_rate = 0.1 # 0.05 - 0.1
 
         # Tạo quần thể ban đầu
-        # Bắt đầu tính thời gian chạy thuật toán
+         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
         
         population = Population(population_size, course_converted, room_converted, timelesson_converted).get_schedules()
@@ -124,7 +124,7 @@ def run_genetic_algorithm():
     
         ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result = ga.run(num_generations)
+        population_result, running_time = ga.run(num_generations, start_time)
         unchanged_conflict_count = ga.get_unchanged_count()
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
@@ -142,12 +142,7 @@ def run_genetic_algorithm():
 
         print("Best schedule: ", best_schedule[0])
         
-        # Kết thúc tính thời gian chạy thuật toán
-        end_time = time.time()
-        
-        # Tính thời gian chạy thuật toán
-        running_time = end_time - start_time
-        print("Time: ", end_time - start_time)
+        print("Running time: ", running_time)
         if ga.get_population()[0].get_conflict() == 0 or (unchanged_conflict_count > 150 and running_time > 300) :
             #sound_notification()
             population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
