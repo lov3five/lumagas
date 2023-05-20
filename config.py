@@ -1,4 +1,10 @@
-DB_HOST=localhost
-DB_NAME=ga_demo
-DB_USER=root
-DB_PASSWORD=mysql
+DB_HOST='localhost'
+DB_NAME='ga_demo'
+DB_USER='root'
+DB_PASSWORD='mysql'
+
+
+TIME_STOP_GA = 300
+UNCHANGED_CONFLICT_COUNT = 300
+
+TOURNAMENT_SIZE = 6

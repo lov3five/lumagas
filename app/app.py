@@ -1,7 +1,6 @@
 import os
 
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for)
 from werkzeug.utils import secure_filename
 app = Flask(__name__, static_url_path='/static')
 
@@ -36,22 +35,22 @@ def get_list_data_object_from_db(object):
     return jsonify({'result': data}), 200
 
 # API get list of schedule best fitness from database
-from db.service import get_list_classes_by_schedule_id_newest
+from db.service import get_list_classes_by_schedule_best
 
 
 @app.route('/api/schedule', methods=['GET'])
 def get_schedules():
     schedule = []
-    for i in range(0, len(get_list_classes_by_schedule_id_newest())):
+    for i in range(0, len(get_list_classes_by_schedule_best())):
         schedule.append({
-            'maHocPhan': get_list_classes_by_schedule_id_newest()[i][0],
-            'tenHocPhan': get_list_classes_by_schedule_id_newest()[i][1],
-            'tenLopHoc': get_list_classes_by_schedule_id_newest()[i][2],
-            'tenGiangVien': get_list_classes_by_schedule_id_newest()[i][3],
-            'tenPhongHoc': get_list_classes_by_schedule_id_newest()[i][4],
-            'thoiGianHoc': get_list_classes_by_schedule_id_newest()[i][5],
-            'soLuongSinhVien': get_list_classes_by_schedule_id_newest()[i][6],
-            'sucChua': get_list_classes_by_schedule_id_newest()[i][7],
+            'maHocPhan': get_list_classes_by_schedule_best()[i][0],
+            'tenHocPhan': get_list_classes_by_schedule_best()[i][1],
+            'tenLopHoc': get_list_classes_by_schedule_best()[i][2],
+            'tenGiangVien': get_list_classes_by_schedule_best()[i][3],
+            'tenPhongHoc': get_list_classes_by_schedule_best()[i][4],
+            'thoiGianHoc': get_list_classes_by_schedule_best()[i][5],
+            'soLuongSinhVien': get_list_classes_by_schedule_best()[i][6],
+            'sucChua': get_list_classes_by_schedule_best()[i][7],
         })
     return jsonify({'result': schedule}), 200
 
@@ -104,7 +103,7 @@ def run_genetic_algorithm():
         #data = request.get_json()
         best_fitness = 0
         # xác định dân số ban đầu của quần thể
-        population_size = 50
+        population_size = 15
     
         # xác định số thế hệ (lần lặp lại) thuật toán
         num_generations = 20000
@@ -124,7 +123,7 @@ def run_genetic_algorithm():
     
         ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result, eslapse_time = ga.run(num_generations, start_time)
+        population_result = ga.run(num_generations, start_time)
         end_time = time.time()
         running_time = end_time - start_time
         unchanged_conflict_count = ga.get_unchanged_count()
@@ -157,27 +156,59 @@ def run_genetic_algorithm():
         # Lưu những kết quả tốt nhất vào database
         # Lưu schedule vào database
         # Lấy những thông tin cần lưu
-        fitness = population_result[0].get_fitness()
         
-        create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
-        schedule_id = get_schedule_id_newest()
-        # Lưu classes vào database
-        for i in range(0, len(population_result[0].get_classes())):
-            course_id = population_result[0].get_classes()[i].get_course().get_course_id()
-            room_id = population_result[0].get_classes()[i].get_room().get_room_id()
-            timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
-            create_classes(course_id, room_id, timelesson_id, schedule_id)
-        # Nếu các classes không lưu vào db, xóa schedule vừa lưu
+        min_conflict = population_result[0].get_conflict()
+
+        # Lưu các lịch có fitness bằng best_fitness
+        for i in range(0, len(population_result)):
+            if population_result[i].get_conflict() == min_conflict:
+                # Lưu schedule vào database
+                conflict = population_result[i].get_conflict()
+                fitness = population_result[i].get_fitness()
+                create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
+                schedule_id = get_schedule_id_newest()
+                for j in range(0, len(population_result[i].get_classes())):
+                    course_id = population_result[i].get_classes()[j].get_course().get_course_id()
+                    room_id = population_result[i].get_classes()[j].get_room().get_room_id()
+                    timelesson_id = population_result[i].get_classes()[j].get_timelesson().get_timelesson_id()
+                    create_classes(course_id, room_id, timelesson_id, schedule_id)
+
         if get_list_classes_by_schedule_id(schedule_id) == []:
             delete_schedule_by_id(schedule_id)
-    return jsonify({'result': 'success', 'unchanged_conflict_count': unchanged_conflict_count}), 200
+    return jsonify({'result': 'success'}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
-#@app.route('/api/ga/result-analysis', methods=['GET'])
-#def get_result_analysis():
+@app.route('/api/ga/result-analysis', methods=['GET'])
+def get_result_analysis():
+    result = get_list_schedules_create_nearly()
+    list_schedule = []
+    for i in range(0, len(result)):
+        list_schedule.append({ 
+                'schedule_id': result[i][0], 
+                'fitness': result[i][1],
+                'confict': result[i][6],
+                'created_at': result[i][7]
+        })
+    return jsonify({'result': 'success', 'populationSize': result[1][3], 'mutationRate': result[1][4],'crossOver': result[1][5], 'runningTime': result[1][2] , 'data': list_schedule}), 200
 
 
-""" POST """
+# API get schedule by id
+@app.route('/api/schedule/<int:schedule_id>', methods=['GET'])
+def get_schedule_by_id_func(schedule_id):
+    schedule = []
+    for i in range(0, len( get_list_classes_by_schedule_id(schedule_id))):
+        schedule.append({
+            'maHocPhan':  get_list_classes_by_schedule_id(schedule_id)[i][0],
+            'tenHocPhan':  get_list_classes_by_schedule_id(schedule_id)[i][1],
+            'tenLopHoc':  get_list_classes_by_schedule_id(schedule_id)[i][2],
+            'tenGiangVien':  get_list_classes_by_schedule_id(schedule_id)[i][3],
+            'tenPhongHoc':  get_list_classes_by_schedule_id(schedule_id)[i][4],
+            'thoiGianHoc':  get_list_classes_by_schedule_id(schedule_id)[i][5],
+            'soLuongSinhVien':  get_list_classes_by_schedule_id(schedule_id)[i][6],
+            'sucChua':  get_list_classes_by_schedule_id(schedule_id)[i][7],
+        })
+    return jsonify({'result': schedule}), 200
+
 ### UPLOAD FILE EXCEL
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
 OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
@@ -258,7 +289,63 @@ def upload_file(type_data):
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
 
-            
+# API export file excel
+from excel.write_excel import export_to_excel
+#add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
+#add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
+from datetime import datetime as dt
+
+# @app.route('/api/export/schedule', methods=['GET'])
+# def export_file():
+#     result = get_list_classes_for_export_schedule_best()
+#     columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
+#                'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
+#                'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+
+#     df = pd.DataFrame(result, columns=columns)
+
+#     # Tạo tên file tự động dựa trên thời gian
+#     current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+#     file_name = f"schedule_fitness_{current_time}.xlsx"
+
+#     # Tạo đường dẫn cho file xuất
+#     file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
+
+#     # Xuất DataFrame thành file Excel
+#     df.to_excel(file_path, index=False)
+
+#     # Kiểm tra xem file có tồn tại hay không
+#     if os.path.isfile(file_path):
+#         # Trả về đường dẫn của file để người dùng tải xuống
+#         return jsonify({'file_url': file_path})
+#     else:
+#         return jsonify({'result': 'File not found'}), 404
+
+@app.route('/api/export/schedule/', methods=['GET'])
+def export_file():
+    result = get_list_classes_for_export_schedule_best()
+    columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
+               'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
+               'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+
+    df = pd.DataFrame(result, columns=columns)
+
+    # Tạo tên file tự động dựa trên thời gian
+    current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"schedule_fitness_{current_time}.xlsx"
+
+    # Tạo đường dẫn tạm thời cho file xuất
+    file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
+
+    # Xuất DataFrame thành file Excel
+    df.to_excel(file_path, index=False)
+
+    # Kiểm tra xem file có tồn tại hay không
+    if os.path.isfile(file_path):
+        # Trả về file trực tiếp cho người dùng để tải xuống
+        return send_from_directory(app.config['DOWNLOAD_FOLDER'],file_name, as_attachment=True)
+    else:
+        return jsonify({'result': 'File not found'}), 404
 
 # API download file
 @app.route('/api/download/<filename>', methods=['GET'])

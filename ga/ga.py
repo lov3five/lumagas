@@ -3,6 +3,8 @@ from ga.population import Population
 import os
 import pandas as pd
 import time
+import config
+
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -95,6 +97,8 @@ class GA:
         if current_conflict == self.prev_conflict:
             self.unchanged_count += 1  
             print('Số thế hệ không thay đổi conflict: ', self.unchanged_count) 
+        else:
+            self.unchanged_count = 0
             
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict
@@ -128,7 +132,7 @@ class GA:
     
     def select_parents(self):
         # Tournament selection
-        tournament_size = 6
+        tournament_size = config.TOURNAMENT_SIZE
         tournament = random.choices(self.population, k=tournament_size)
         tournament.sort(key=lambda x: x.get_fitness(), reverse=True)
         parent1 = tournament[0]
@@ -211,7 +215,7 @@ class GA:
             print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
-            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= 150 and elapsed_time >= 300):
+            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= config.UNCHANGED_CONFLICT_COUNT and elapsed_time >= config.TIME_STOP_GA):
                 self.is_done = True
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
@@ -220,6 +224,6 @@ class GA:
                 break
             
                 
-        return self.population, elapsed_time
+        return self.population
     
     
