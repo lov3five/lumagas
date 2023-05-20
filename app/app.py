@@ -199,7 +199,6 @@ def upload_file(type_data):
                 return jsonify({'result': 'Tệp không hợp lệ'}), 400
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
-
             
 # # API upload file excel ROOM
 # @app.route('/api/upload/room', methods=['POST'])
