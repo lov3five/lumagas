@@ -1,7 +1,10 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, jsonify, render_template, send_from_directory
+
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
 from werkzeug.utils import secure_filename
-app = Flask(__name__)
+
+app = Flask(__name__, static_url_path='/static')
 
 # IMPORT DB SERVICE
 from db.service import *
@@ -22,11 +25,12 @@ def index():
 # GA Module support
 import time
 
+from prettytable import PrettyTable
+
 from ga.ga import GA
 from ga.population import Population
 from utils.display_prettytable import display_result
 from utils.sound_notification import sound_notification
-from prettytable import PrettyTable
 
 # TEST API
 """ GET """
@@ -36,6 +40,7 @@ def test():
 
 # API get list of schedule best fitness from database
 from db.service import get_list_classes_by_schedule_id_newest
+
 
 @app.route('/api/schedule', methods=['GET'])
 def get_schedules():
@@ -130,8 +135,10 @@ app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
 import pandas as pd
-from excel.read_excel import check_file_data_input, save_file_upload_to_db
+
 from excel.config_api_template import check_api_and_select_template_to_compare
+from excel.read_excel import check_file_data_input, save_file_upload_to_db
+
 
 # Kiểm tra file có đúng định dạng không
 def allowed_file(filename):
