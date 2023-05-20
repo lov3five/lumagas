@@ -39,18 +39,19 @@ from db.service import get_list_classes_by_schedule_id_newest
 
 @app.route('/api/schedule', methods=['GET'])
 def get_schedules():
-    result = get_list_classes_by_schedule_id_newest()
     schedule = []
-    for i in range(0, len(result)):
+    for i in range(0, len(get_list_classes_by_schedule_id_newest())):
         schedule.append({
-            'maHocPhan': result[i][0],
-            'tenHocPhan': result[i][1],
-            'tenLopHoc': result[i][2],
-            'tenGiangVien': result[i][3],
-            'tenPhongHoc': result[i][4],
-            'thoiGianHoc': result[i][5],
+            'maHocPhan': get_list_classes_by_schedule_id_newest()[i][0],
+            'tenHocPhan': get_list_classes_by_schedule_id_newest()[i][1],
+            'tenLopHoc': get_list_classes_by_schedule_id_newest()[i][2],
+            'tenGiangVien': get_list_classes_by_schedule_id_newest()[i][3],
+            'tenPhongHoc': get_list_classes_by_schedule_id_newest()[i][4],
+            'thoiGianHoc': get_list_classes_by_schedule_id_newest()[i][5],
+            'soLuongSinhVien': get_list_classes_by_schedule_id_newest()[i][6],
+            'sucChua': get_list_classes_by_schedule_id_newest()[i][7],
         })
-    return jsonify({'result': schedule, 'data': result}), 200
+    return jsonify({'result': schedule}), 200
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
