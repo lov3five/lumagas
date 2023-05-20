@@ -54,7 +54,7 @@ def get_schedules():
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
-@app.route('/api/start-ga', methods=['GET'])
+@app.route('/api/ga/start', methods=['GET'])
 def run_genetic_algorithm():
     # Lấy các thông số chạy GA từ yêu cầu POST
     #data = request.get_json()
@@ -119,6 +119,9 @@ def run_genetic_algorithm():
         if get_list_classes_by_schedule_id(schedule_id) == []:
             delete_schedule_by_id(schedule_id)
         return jsonify({'result': 'success'}), 200
+    
+# API get index input of GA: population size, mutation rate, crossover rate
+#@app.route('/api/ga/result-any', methods=['GET'])
     
 """ POST """
 ### UPLOAD FILE EXCEL
