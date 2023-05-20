@@ -122,7 +122,7 @@ def run_genetic_algorithm():
         # Nếu các classes không lưu vào db, xóa schedule vừa lưu
         if get_list_classes_by_schedule_id(schedule_id) == []:
             delete_schedule_by_id(schedule_id)
-        return jsonify({'result': 'success'}), 200
+    return jsonify({'result': 'success'}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
 #@app.route('/api/ga/result-analysis', methods=['GET'])
