@@ -36,22 +36,22 @@ def get_list_data_object_from_db(object):
     return jsonify({'result': data}), 200
 
 # API get list of schedule best fitness from database
-from db.service import get_list_classes_by_schedule_id_newest
+from db.service import get_list_classes_by_schedule_best
 
 
 @app.route('/api/schedule', methods=['GET'])
 def get_schedules():
     schedule = []
-    for i in range(0, len(get_list_classes_by_schedule_id_newest())):
+    for i in range(0, len(get_list_classes_by_schedule_best())):
         schedule.append({
-            'maHocPhan': get_list_classes_by_schedule_id_newest()[i][0],
-            'tenHocPhan': get_list_classes_by_schedule_id_newest()[i][1],
-            'tenLopHoc': get_list_classes_by_schedule_id_newest()[i][2],
-            'tenGiangVien': get_list_classes_by_schedule_id_newest()[i][3],
-            'tenPhongHoc': get_list_classes_by_schedule_id_newest()[i][4],
-            'thoiGianHoc': get_list_classes_by_schedule_id_newest()[i][5],
-            'soLuongSinhVien': get_list_classes_by_schedule_id_newest()[i][6],
-            'sucChua': get_list_classes_by_schedule_id_newest()[i][7],
+            'maHocPhan': get_list_classes_by_schedule_best()[i][0],
+            'tenHocPhan': get_list_classes_by_schedule_best()[i][1],
+            'tenLopHoc': get_list_classes_by_schedule_best()[i][2],
+            'tenGiangVien': get_list_classes_by_schedule_best()[i][3],
+            'tenPhongHoc': get_list_classes_by_schedule_best()[i][4],
+            'thoiGianHoc': get_list_classes_by_schedule_best()[i][5],
+            'soLuongSinhVien': get_list_classes_by_schedule_best()[i][6],
+            'sucChua': get_list_classes_by_schedule_best()[i][7],
         })
     return jsonify({'result': schedule}), 200
 
@@ -290,7 +290,37 @@ def upload_file(type_data):
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
 
-            
+# API export file excel
+from excel.write_excel import export_to_excel
+#add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
+#add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
+from datetime import datetime as dt
+
+@app.route('/api/export/schedule', methods=['GET'])
+def export_file():
+    result = get_list_classes_for_export_schedule_best()
+    columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
+               'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
+               'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+
+    df = pd.DataFrame(result, columns=columns)
+
+    # Tạo tên file tự động dựa trên thời gian
+    current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"schedule_fitness_{current_time}.xlsx"
+
+    # Tạo đường dẫn cho file xuất
+    file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
+
+    # Xuất DataFrame thành file Excel
+    df.to_excel(file_path, index=False)
+
+    # Kiểm tra xem file có tồn tại hay không
+    if os.path.isfile(file_path):
+        # Trả về đường dẫn của file để người dùng tải xuống
+        return jsonify({'file_url': file_path})
+    else:
+        return jsonify({'result': 'File not found'}), 404
 
 # API download file
 @app.route('/api/download/<filename>', methods=['GET'])

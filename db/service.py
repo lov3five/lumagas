@@ -159,9 +159,9 @@ def get_list_classes_by_schedule_id(schedule_id):
     except Exception as e:
         print('Error: ' + str(e))
         
-def get_list_classes_by_schedule_id_newest():
+def get_list_classes_by_schedule_best():
     try:
-        schedule_id_newest = get_schedule_id_newest()
+        schedule_id = get_schedule_id_newest()
         sql = """SELECT c2.name, c2.subject_name, c2.classroom_id, 
         c2.instructor_name , r.name, t.period, c2.max_number_of_students, r.capacity 
                 FROM classes c
@@ -169,7 +169,23 @@ def get_list_classes_by_schedule_id_newest():
                 JOIN rooms r on c.room_id = r.id 
                 JOIN timelessons t on c.timelesson_id = t.id
                 WHERE schedule_id = %s"""
-        val = (schedule_id_newest,)
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
+def get_list_classes_for_export_schedule_best():
+    try:
+        schedule_id = get_schedule_id_newest()
+        sql = """SELECT c2.name, c2.classroom_id, c2.instructor_id , c2.instructor_name , c2.subject_id , c2.subject_name , c2.max_number_of_students , r.name , r.capacity, r.`type` , t.uuid , t.period 
+                FROM classes c
+                JOIN courses c2 on c.course_id = c2.id 
+                JOIN rooms r on c.room_id = r.id 
+                JOIN timelessons t on c.timelesson_id = t.id
+                WHERE schedule_id = %s"""
+        val = (schedule_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         return myresult

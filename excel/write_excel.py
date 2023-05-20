@@ -43,3 +43,20 @@ def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_nam
             df = pd.read_excel(xls, sheet_name)
             dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
+
+def export_to_excel(file_path, list_name_column, df):
+    """
+    Xuất DataFrame vào tệp Excel với tên cột đã chỉ định.
+
+    Parameters:
+    file_path (str): Đường dẫn đến tệp Excel.
+    list_name_column (list): Danh sách tên cột.
+    df (pandas.DataFrame): DataFrame chứa dữ liệu cần xuất.
+
+    Returns:
+    None
+    """
+    # Ghi DataFrame vào tệp Excel
+    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
+        df.to_excel(writer, sheet_name='Sheet1', columns=list_name_column, index=False)
+
