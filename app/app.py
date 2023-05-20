@@ -61,7 +61,7 @@ from ga.timelesson import init_timelessons
 def validate_data(courses, rooms, timelessons):
     if courses == []:
         return False, "Bạn chưa import dữ liệu lớp học phần (COURSES)"
-    if rooms is None:
+    if rooms == []:
         return False, "Bạn chưa import dữ liệu phòng học (ROOMS)"
     if timelessons == []:
         return False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
