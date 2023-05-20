@@ -18,7 +18,7 @@ def get_list_data(name_table, format=False):
     myresult = mycursor.fetchall()
     if myresult == []:
         print(name_table + ' no data!!!')
-        return
+        return myresult
     if format == True:
         pretty_table(name_table, mycursor, myresult)
     return myresult
@@ -113,12 +113,12 @@ def create_course(name, classroom_id, instructor_id, instructor_name, subject_id
     
 def delete_all_course():
     try:
-        sql = "DELETE FROM courses"
-        mycursor.execute(sql)
+            sql = "DELETE FROM courses"
+            mycursor.execute(sql)
+            mydb.commit()
+            print(mycursor.rowcount, "record(s) deleted from COURSES")
     except Exception as e:
         print('Error: ' + str(e))
-    mydb.commit()
-    print(mycursor.rowcount, "record(s) deleted from COURSES")
     
 def get_list_courses():
     try:
