@@ -28,6 +28,7 @@ def get_data_from_db():
 # Lấy dữ liệu từ user và khởi tạo các đối tượng để chạy thuật toán
 def get_data_input_of_user_from_db_and_init():
     courses_db, rooms_db, timelessons_db = get_data_from_db()
+    print("courses_db: ", courses_db)
     courses_db_global = init_courses(courses_db)
     rooms_db_global = init_rooms(rooms_db)
     timelessons_db_global = init_timelessons(timelessons_db)

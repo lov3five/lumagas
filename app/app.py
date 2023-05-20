@@ -34,6 +34,18 @@ from prettytable import PrettyTable
 def test():
     return jsonify({'result': 'success'}), 200
 
+@app.route('/api/data/<string:object>', methods=['GET'])
+def get_list_data_object_from_db(object):
+    if object == 'courses':
+        data = get_list_data('courses')
+    elif object == 'rooms':
+        data = get_list_data('rooms')
+    elif object == 'timelessons':
+        data = get_list_data('timelessons')
+    else:
+        return jsonify({'result': 'Không tìm thấy dữ liệu'}), 404
+    return jsonify({'result': data}), 200
+
 # API get list of schedule best fitness from database
 from db.service import get_list_classes_by_schedule_id_newest
 
@@ -61,7 +73,6 @@ from ga.init_data import *
 def run_genetic_algorithm():
     # Kiểm tra điều kiện dữ liệu
     courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
-    print("============================================", courses, rooms, timelessons)
     is_passed, message = validate_data()
     if is_passed == False:
         return jsonify({'result': 'Dữ liệu không hợp lệ', 'message': message}), 400
@@ -79,10 +90,7 @@ def run_genetic_algorithm():
         # Tỉ lệ lai ghép
         crossover_rate = 0.85  # 0.6 - 0.9
         elitism_rate = 0.1 # 0.05 - 0.1
-        
-        # Lấy dữ liệu từ user
-        courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
-        print("============================================")
+
         # Tạo quần thể ban đầu
         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
