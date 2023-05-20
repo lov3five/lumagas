@@ -1,9 +1,9 @@
 import random
 from ga.population import Population
 from db.service import info_ga
+import os
 
 import pandas as pd
-
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.

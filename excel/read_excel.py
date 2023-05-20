@@ -53,45 +53,54 @@ def check_file_data_input(template_df, df):
 
             
 # Đọc file course và lưu vào db
-def read_and_save_course_to_db(file_path):
+def read_and_save_course_to_db(template_df, df):
     # Đọc tệp tin template.xlsx
-    course_template_df = pd.read_excel('./app/static/file/templates/course_template.xlsx')
+    course_template_df = template_df
     # Đọc tệp tin data_course_input
-    course_df = pd.read_excel(file_path)
+    course_df = df
 
     # Đọc dữ liệu từ tệp tin Excel
     if course_df is not None:
-        if check_file_data_input(course_template_df, course_df):
-            expected_columns = list(course_template_df.columns)
-            # Thêm các danh sách các khóa học vào db
-            for index, row in course_df.iterrows():
-                create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]] ,row[expected_columns[6]])
+        expected_columns = list(course_template_df.columns)
+        # Thêm các danh sách các khóa học vào db
+        for index, row in course_df.iterrows():
+            create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]] ,row[expected_columns[6]])
     
             
 #Đọc file rooms và lưu vào db
-def read_and_save_room_to_db(file_path):
+def read_and_save_room_to_db(template_df, df):
     # Đọc tệp tin template.xlsx
-    room_template_df = pd.read_excel('./app/static/file/templates/room_template.xlsx')
+    room_template_df = template_df
     
     # Đọc dữ liệu từ tệp Excel
-    room_df = pd.read_excel(file_path)
+    room_df = df
     
-    if room_df is not None and check_file_data_input(room_template_df, room_df):
+    if room_df is not None:
         expected_columns = list(room_template_df.columns)
         # Thêm các danh sách các phòng học vào db
         for index, row in room_df.iterrows():
             create_room(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]])
                 
-def read_and_save_timelesson_to_db(file_path):
+def read_and_save_timelesson_to_db(template_df, df):
     # Đọc tệp tin template.xlsx
-    timelesson_template_df = pd.read_excel('./app/static/file/templates/timelesson_template.xlsx')
+    timelesson_template_df = template_df
     
     # Đọc dữ liệu từ tệp Excel
-    timelesson_df = pd.read_excel(file_path)
+    timelesson_df = df
 
-    if timelesson_df is not None and check_file_data_input(timelesson_template_df, timelesson_df):
+    if timelesson_df is not None:
         expected_columns = list(timelesson_template_df.columns)
         print(expected_columns)
         # Thêm các danh sách các thời gian học vào db
         for index, row in timelesson_df.iterrows():
             create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
+
+def save_file_upload_to_db(type_data, template_df, df):
+    if type_data == 'course':
+        read_and_save_course_to_db(template_df, df)
+    elif type_data == 'room':
+        read_and_save_room_to_db(template_df, df)
+    elif type_data == 'timelesson':
+        read_and_save_timelesson_to_db(template_df, df)
+    else:
+        print('Không tìm thấy loại dữ liệu.')
