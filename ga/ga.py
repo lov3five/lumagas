@@ -61,6 +61,9 @@ class GA:
         
     def get_population(self):
         return self.population
+    
+    def get_unchanged_count(self):
+        return self.unchanged_count
         
     def evolve(self):
         # Biến đếm số thế hệ liên tiếp mà giá trị conflict không thay đổi
@@ -83,8 +86,6 @@ class GA:
         if current_conflict == self.prev_conflict:
             self.unchanged_count += 1  
             print('Số thế hệ không thay đổi conflict: ', self.unchanged_count) 
-        else:
-            self.unchanged_count = 0
             
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict

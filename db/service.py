@@ -119,6 +119,15 @@ def delete_all_course():
         print('Error: ' + str(e))
     mydb.commit()
     print(mycursor.rowcount, "record(s) deleted from COURSES")
+    
+def get_list_courses():
+    try:
+        sql = "SELECT * FROM courses"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
         
 # CLASSES
 def create_classes(course_id, room_id, timelesson_id, schedule_id):
@@ -271,7 +280,10 @@ def delete_all_timelesson():
 courses_db = get_all_courses()
 rooms_db = get_list_data('rooms')
 timelessons_db = get_list_data('timelessons')
+
 def courses_per_resource(courses, rooms, time_lessons):
+    if rooms is None or time_lessons is None:
+        return ("courses_per_resource: {} / {}".format(len(courses), 0))
     return ("courses_per_resource: {} / {}".format(len(courses), len(rooms) * len(time_lessons)))
 
 info_ga = courses_per_resource(courses_db, rooms_db, timelessons_db)

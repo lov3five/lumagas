@@ -54,71 +54,106 @@ def get_schedules():
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
+from ga.course import init_courses
+from ga.room import init_rooms
+from ga.timelesson import init_timelessons
+
+def validate_data(courses, rooms, timelessons):
+    if courses == []:
+        return False, "Bạn chưa import dữ liệu lớp học phần (COURSES)"
+    if rooms is None:
+        return False, "Bạn chưa import dữ liệu phòng học (ROOMS)"
+    if timelessons == []:
+        return False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
+    if len(courses) > (len(rooms) * len(timelessons)):
+        return False, "Số lượng lớp học phần (COURSES) lớn hơn [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
+    else:
+        return True, "OK"
+
+def get_data_from_user():
+    courses = init_courses(courses_db)
+    rooms = init_rooms(rooms_db)
+    timelessons = init_timelessons(timelessons_db)
+    return courses, rooms, timelessons
+    
 @app.route('/api/ga/start', methods=['GET'])
 def run_genetic_algorithm():
-    # Lấy các thông số chạy GA từ yêu cầu POST
-    #data = request.get_json()
-    best_fitness = 0
-    # xác định dân số ban đầu của quần thể
-    population_size = 80
+    # Kiểm tra điều kiện dữ liệu
+    is_passed, message = validate_data(courses_db, rooms_db, timelessons_db)
+    if is_passed == False:
+        return jsonify({'result': message}), 400
+    else:
+        # Lấy các thông số chạy GA từ yêu cầu POST
+        #data = request.get_json()
+        best_fitness = 0
+        # xác định dân số ban đầu của quần thể
+        population_size = 50
     
-    # xác định số thế hệ (lần lặp lại) thuật toán
-    num_generations = 20000
-    # Tỉ lệ đột biến
-    mutation_rate = 0.1 # 0.01 - 0.1
-    # Tỉ lệ lai ghép
-    crossover_rate = 0.85  # 0.6 - 0.9
-    elitism_rate = 0.1 # 0.05 - 0.1
-    
-    # Tạo quần thể ban đầu
-    start_time = time.time()
-    population = Population(population_size).get_schedules()
-    print("Cá thể tốt nhất trong quần thể ban đầu:")
-    print(display_result(population))
-    
-    ga = GA(population, mutation_rate, crossover_rate, elitism_rate)
-    
-    population_result = ga.run(num_generations)
-        # Lấy ra kết quả tốt nhất
-    best_schedule = ga.get_population()
-    for schedule in best_schedule:
-        list_conflict_of_schedule = []
-        list_fitness_of_schedule = []
-        list_conflict_of_schedule.append(schedule.get_conflict())
-        list_fitness_of_schedule.append(schedule.get_fitness())
-
-    x = PrettyTable()
-    x.field_names = ["Schedule ID", "Conflict", "Fitness"]
-    for i in range(0, len(list_conflict_of_schedule)):
-        x.add_row([i, list_conflict_of_schedule[i], list_fitness_of_schedule[i]])
-    print(x)
-
-    print("Best schedule: ", best_schedule[0])
-    end_time = time.time()
-    print("Time: ", end_time - start_time)
-    if ga.get_population()[0].get_conflict() == 0 :
-        #sound_notification()
-        population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
-        print('Best schedule fitness: ', population_result[0].get_fitness())
-        display_result(population_result)
-        # Lưu những kết quả tốt nhất vào database
-        # Lưu schedule vào database
-        # Lấy những thông tin cần lưu
-        fitness = population_result[0].get_fitness()
-        running_time = end_time - start_time
+        # xác định số thế hệ (lần lặp lại) thuật toán
+        num_generations = 20000
+        # Tỉ lệ đột biến
+        mutation_rate = 0.1 # 0.01 - 0.1
+        # Tỉ lệ lai ghép
+        crossover_rate = 0.85  # 0.6 - 0.9
+        elitism_rate = 0.1 # 0.05 - 0.1
         
-        create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
-        schedule_id = get_schedule_id_newest()
-        # Lưu classes vào database
-        for i in range(0, len(population_result[0].get_classes())):
-            course_id = population_result[0].get_classes()[i].get_course().get_course_id()
-            room_id = population_result[0].get_classes()[i].get_room().get_room_id()
-            timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
-            create_classes(course_id, room_id, timelesson_id, schedule_id)
-        # Nếu các classes không lưu vào db, xóa schedule vừa lưu
-        if get_list_classes_by_schedule_id(schedule_id) == []:
-            delete_schedule_by_id(schedule_id)
-        return jsonify({'result': 'success'}), 200
+        # Lấy dữ liệu từ user
+        courses, rooms, timelessons = get_data_from_user()
+        # Tạo quần thể ban đầu
+        # Bắt đầu tính thời gian chạy thuật toán
+        start_time = time.time()
+        population = Population(population_size, courses, rooms, timelessons).get_schedules()
+        print("Cá thể tốt nhất trong quần thể ban đầu:")
+        print(display_result(population))
+    
+        ga = GA(population, mutation_rate, crossover_rate, elitism_rate)
+    
+        population_result = ga.run(num_generations)
+        unchanged_conflict_count = ga.get_unchanged_count()
+        # Lấy ra kết quả tốt nhất
+        best_schedule = ga.get_population()
+        for schedule in best_schedule:
+            list_conflict_of_schedule = []
+            list_fitness_of_schedule = []
+            list_conflict_of_schedule.append(schedule.get_conflict())
+            list_fitness_of_schedule.append(schedule.get_fitness())
+
+        x = PrettyTable()
+        x.field_names = ["Schedule ID", "Conflict", "Fitness"]
+        for i in range(0, len(list_conflict_of_schedule)):
+            x.add_row([i, list_conflict_of_schedule[i], list_fitness_of_schedule[i]])
+        print(x)
+
+        print("Best schedule: ", best_schedule[0])
+        
+        # Kết thúc tính thời gian chạy thuật toán
+        end_time = time.time()
+        
+        # Tính thời gian chạy thuật toán
+        running_time = end_time - start_time
+        print("Time: ", end_time - start_time)
+        if ga.get_population()[0].get_conflict() == 0 or (unchanged_conflict_count > 150 and running_time > 300) :
+            #sound_notification()
+            population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
+            print('Best schedule fitness: ', population_result[0].get_fitness())
+            display_result(population_result)
+            # Lưu những kết quả tốt nhất vào database
+            # Lưu schedule vào database
+            # Lấy những thông tin cần lưu
+            fitness = population_result[0].get_fitness()
+        
+            create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
+            schedule_id = get_schedule_id_newest()
+            # Lưu classes vào database
+            for i in range(0, len(population_result[0].get_classes())):
+                course_id = population_result[0].get_classes()[i].get_course().get_course_id()
+                room_id = population_result[0].get_classes()[i].get_room().get_room_id()
+                timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
+                create_classes(course_id, room_id, timelesson_id, schedule_id)
+            # Nếu các classes không lưu vào db, xóa schedule vừa lưu
+            if get_list_classes_by_schedule_id(schedule_id) == []:
+                delete_schedule_by_id(schedule_id)
+        return jsonify({'result': 'success', 'unchanged_conflict_count': unchanged_conflict_count}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
 #@app.route('/api/ga/result-analysis', methods=['GET'])
