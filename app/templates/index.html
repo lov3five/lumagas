@@ -12,28 +12,42 @@
   </head>
   <body
     x-data="{
-    file: null,
+    fileCourse: null,
+    fileRoom: null,
+    fileTimeLesson: null,
     isOpen: false,isOpen2: false,isOpen3: false,isOpen4: false,isOpen5: false,
     schedules:'',
-    uploadFile: function() {
-      if (!this.file) return;
-
+    disabled: false,disabled2: false,disabled3: false,
+    uploadFile: function(route) {
+      let fileTemp = this.fileCourse
+      if(route == 'room'){fileTemp = this.fileRoom}
+      if(route == 'timelesson'){fileTemp = this.fileTimeLesson}
+      if (!fileTemp) return;
       let formData = new FormData();
-      formData.append('file', this.file);
-  
-      fetch('/upload', {
+      formData.append('file', fileTemp);
+      fetch(`/api/upload/${route}`, {
         method: 'POST',
         body: formData
       })
       .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
+        if(response.status == 400){
+          alert('Tệp không hợp lệ!')
+          if(route == 'course'){$refs.fileInput.value = null}
+          if(route == 'room'){$refs.fileInput1.value = null}
+          if(route == 'timelesson'){$refs.fileInput2.value = null}
+        }
+        if(response.status == 200){
+          if(route == 'course'){this.disabled = true;}
+          if(route == 'room'){this.disabled2 = true;}
+          if(route == 'timelesson'){this.disabled3 = true}
         }
         return response.json();
       })
       .then(data => {
-        this.file = null;
-        alert(data.message);
+        if(route == 'room'){this.fileRoom = null}
+        if(route == 'timelesson'){this.fileTimeLesson = null}
+        if(route == 'timelesson'){this.fileCourse = null}
+        alert(data.result);
       })
     },
     getSchedule: function(){
@@ -48,26 +62,26 @@
           })
         .then(data => {
           this.schedules = data.result;
-          alert('Chạy thuật toán thành công!')
+          alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.')
           })
         },
-    runGa: function(){
-      fetch('/api/ga/start', {
-        method: 'GET',
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(response.statusText);
-            }
-            return response.json();
-          })
-        .then(data => {
-          if(data.result == 'success'){
-            this.isOpen3 = false;
-            this.getSchedule();
-            }
-          })
-        }
+        runGa: function(){
+          fetch('/api/ga/start', {
+            method: 'GET',
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(response.statusText);
+                }
+                return response.json();
+              })
+            .then(data => {
+              if(data.result == 'success'){
+                this.isOpen3 = false;
+                this.getSchedule();
+                }
+              })
+          },
   }">
     <div class="main">
       <h1 class="mb-10 text-center text-3xl font-extrabold text-gray-900 md:text-5xl lg:text-6xl">
@@ -107,7 +121,7 @@
                         <p class="text-sm text-gray-500">
                           Bạn vui lòng tải templates này về và điền các thông tin chính xác vào mẫu.
                         </p>
-                        <a href="/static/js/tailwindcss.js" download>
+                        <a href="/static/file/templates/course_template.xlsx" download>
                           <button
                             type="button"
                             class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
@@ -123,7 +137,45 @@
                                 stroke-linejoin="round"
                                 d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
-                            <span class="ml-1 min-w-[120px]">Templates.xlsx</span>
+                            <span class="ml-1 min-w-[120px]">Course Templates.xlsx</span>
+                          </button>
+                        </a>
+                        <a href="/static/file/templates/room_template.xlsx" download>
+                          <button
+                            type="button"
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="w-6 h-6">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span class="ml-1 min-w-[120px]">Room Templates.xlsx</span>
+                          </button>
+                        </a>
+                        <a href="/static/file/templates/timelesson_template.xlsx" download>
+                          <button
+                            type="button"
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="w-6 h-6">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span class="ml-1 min-w-[120px]">Timelesson Templates.xlsx</span>
                           </button>
                         </a>
                       </div>
@@ -137,30 +189,84 @@
                     <div class="mt-2 text-center sm:mt-0 sm:ml-4 sm:text-left sm:w-full">
                       <h3 class="mt-2 text-lg leading-6 font-medium text-gray-900">Bước 2</h3>
                       <div class="mt-2">
-                        <p class="text-sm text-gray-500">Tải file excel đã điền thông tin vào đây.</p>
-                        <label class="block mt-2">
+                        <p class="text-md text-gray-500 animate-bounce">Tải file excel đã điền thông tin vào đây.</p>
+                        <label class="block mt-4 text-sm">
+                          Nhập file <strong>Course template</strong> ở đây:
                           <input
                             id="file_input"
                             x-ref="fileInput"
                             type="file"
                             accept=".xlsx,.csv,.xls"
                             maxlength="1048576"
-                            x-on:change="file = $event.target.files[0]"
+                            x-on:change="fileCourse = $event.target.files[0]"
                             type="file"
-                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+                        </label>
+                        <label class="block mt-4 text-sm">
+                          Nhập file <strong>Room template</strong> ở đây:
+                          <input
+                            id="file_input"
+                            x-ref="fileInput1"
+                            type="file"
+                            accept=".xlsx,.csv,.xls"
+                            maxlength="1048576"
+                            x-on:change="fileRoom = $event.target.files[0]"
+                            type="file"
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
+                        </label>
+                        <label class="block mt-4 text-sm">
+                          Nhập file <strong>Timelesson template</strong> ở đây:
+                          <input
+                            id="file_input"
+                            x-ref="fileInput2"
+                            type="file"
+                            accept=".xlsx,.csv,.xls"
+                            maxlength="1048576"
+                            x-on:change="fileTimeLesson = $event.target.files[0]"
+                            type="file"
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
                         </label>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row sm: justify-center">
                   <button
-                    @click="uploadFile;$refs.fileInput.value = null;isOpen= false;"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Upload File
+                    @click="uploadFile('course');"
+                    x-bind:disabled="disabled"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
+                    Upload Course
                   </button>
                   <button
-                    @click="$refs.fileInput.value = null;isOpen= false;"
+                    @click="uploadFile('room');"
+                    x-bind:disabled="disabled2"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
+                    Upload Room
+                  </button>
+                  <button
+                    @click="uploadFile('timelesson');"
+                    x-bind:disabled="disabled3"
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none">
+                    Upload Timelesson
+                  </button>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    @click="if(disabled && disabled2 && disabled3) {
+                      isOpen = false;
+                      disabled = false;
+                      disabled2 = false;
+                      disabled3 = false;
+                      $refs.fileInput.value = null
+                      $refs.fileInput1.value = null
+                      $refs.fileInput2.value = null
+                    } else {
+                      if(confirm('Bạn chưa nhập đủ file, bạn muốn đóng chứ?')== true){
+                        isOpen = false;
+                      }else{
+                        isOpen = true;
+                      }
+                    }"
                     class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Close
                   </button>
@@ -267,7 +373,7 @@
                   </button>
 
                   <button
-                    @click="$refs.fileInput.value = null;isOpen2= false;"
+                    @click="isOpen2= false;"
                     class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Close
                   </button>
@@ -532,7 +638,10 @@
             <tbody>
               <template x-for="item in schedules" :key="item.maHocPhan">
                 <tr class="bg-white border-b hover:bg-gray-50">
-                  <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap" x-text="item.maHocPhan"></th>
+                  <th
+                    scope="row"
+                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                    x-text="item.maHocPhan"></th>
                   <td class="px-6 py-4" x-text="item.tenHocPhan"></td>
                   <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
                   <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
@@ -542,7 +651,7 @@
                     <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
                   </td>
                 </tr>
-            </template>
+              </template>
             </tbody>
           </table>
         </div>
