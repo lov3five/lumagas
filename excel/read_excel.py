@@ -101,6 +101,7 @@ def read_and_save_timelesson_to_db(template_df, df):
             # Thêm các danh sách các thời gian học vào db
             for index, row in timelesson_df.iterrows():
                 create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
+            
 
 def save_file_upload_to_db(type_data, template_df, df):
     if type_data == 'course':

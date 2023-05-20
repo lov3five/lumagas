@@ -200,11 +200,10 @@ def get_unique_filename(filename):
 # http://127.0.0.1:5000/api/upload/room
 # http://127.0.0.1:5000/api/upload/timelesson
 def upload_file(type_data):
+    file = request.files['file']
     # Kiểm tra xem request POST có chứa phần file không
     if 'file' not in request.files:
         return jsonify({'result': 'Không có tệp từ yêu cầu'}), 400
-    
-    file = request.files['file']
     # Nếu người dùng không chọn file, trình duyệt gửi file trống không có tên file
     if file.filename == '':
         return jsonify({'result': 'Không có tệp nào được chọn để tải lên'}), 400
@@ -228,7 +227,6 @@ def upload_file(type_data):
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             # Lưu file vào database
             save_file_upload_to_db(type_data, template_df, df)
-            
             return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
         else: 
             if error_data is not None:
