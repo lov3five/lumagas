@@ -48,7 +48,7 @@ def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_nam
     return pd.concat(dfs, ignore_index=True)
 
 class GA:
-    def __init__(self, population, mutation_rate, crossover_rate, elitism_rate):
+    def __init__(self, population, mutation_rate, crossover_rate, elitism_rate, courses, rooms, timelessons):
         self.population = population
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -57,6 +57,9 @@ class GA:
         self.unchanged_count = 0
         self.list_conflict = []
         self.list_generation = []
+        self.courses = courses
+        self.rooms = rooms
+        self.timelessons = timelessons
     
         
     def get_population(self):
@@ -128,7 +131,7 @@ class GA:
     
     def crossover_uniform(self, parent1, parent2):
         # Uniform Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         for i in range (0,len(schedule_crossover.get_classes())):
             if(random.random() > 0.5):
                 schedule_crossover.get_classes()[i] = parent1.get_classes()[i]
@@ -139,7 +142,7 @@ class GA:
     
     def crossover_single_point(self, parent1, parent2):
         # Single Point Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         crossover_point = random.randint(0, len(schedule_crossover.get_classes())-1)
         for i in range (0,len(schedule_crossover.get_classes())):
             if i < crossover_point:
@@ -150,7 +153,7 @@ class GA:
     
     def crossover_multi_point(self, parent1, parent2):
         #Multi-point Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         num_points = 40
         points = sorted(random.sample(range(len(schedule_crossover.get_classes())), num_points))
         index = 0
@@ -166,7 +169,7 @@ class GA:
 
     # Hàm đột biến
     def mutate(self, individual):
-        schedule_mutate = Population(1).get_schedules()[0]
+        schedule_mutate = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         for i in range(len(schedule_mutate.get_classes())):
             if random.random() < self.mutation_rate:
                 individual.get_classes()[i] = schedule_mutate.get_classes()[i]

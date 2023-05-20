@@ -66,7 +66,7 @@ def validate_data(courses, rooms, timelessons):
     if timelessons == []:
         return False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
     if len(courses) > (len(rooms) * len(timelessons)):
-        return False, "Số lượng lớp học phần (COURSES) lớn hơn [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
+        return False, "[Số lượng lớp học phần (COURSES)] > [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
     else:
         return True, "OK"
 
@@ -81,7 +81,7 @@ def run_genetic_algorithm():
     # Kiểm tra điều kiện dữ liệu
     is_passed, message = validate_data(courses_db, rooms_db, timelessons_db)
     if is_passed == False:
-        return jsonify({'result': message}), 400
+        return jsonify({'result': 'Dữ liệu không hợp lệ', 'message': message}), 400
     else:
         # Lấy các thông số chạy GA từ yêu cầu POST
         #data = request.get_json()
@@ -102,11 +102,12 @@ def run_genetic_algorithm():
         # Tạo quần thể ban đầu
         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
+        
         population = Population(population_size, courses, rooms, timelessons).get_schedules()
         print("Cá thể tốt nhất trong quần thể ban đầu:")
         print(display_result(population))
     
-        ga = GA(population, mutation_rate, crossover_rate, elitism_rate)
+        ga = GA(population, mutation_rate, crossover_rate, elitism_rate, courses, rooms, timelessons)
     
         population_result = ga.run(num_generations)
         unchanged_conflict_count = ga.get_unchanged_count()
