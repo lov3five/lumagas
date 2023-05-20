@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LUMAGAS - Timetable Generator GAs</title>
     <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="icon" href="/static/favicon.ico" />
     <script src="/static/js/tailwindcss.js"></script>
     <script defer src="/static/js/alpinejs@.min.js"></script>
   </head>
@@ -51,7 +52,7 @@
           })
         },
     runGa: function(){
-      fetch('/api/start-ga', {
+      fetch('/api/ga/start', {
         method: 'GET',
         })
         .then(response => {

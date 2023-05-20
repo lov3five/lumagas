@@ -1,7 +1,7 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 # IMPORT DB SERVICE
 from db.service import *
@@ -121,8 +121,10 @@ def run_genetic_algorithm():
         return jsonify({'result': 'success'}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
-#@app.route('/api/ga/result-any', methods=['GET'])
-    
+#@app.route('/api/ga/result-analysis', methods=['GET'])
+#def get_result_analysis():
+
+
 """ POST """
 ### UPLOAD FILE EXCEL
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
@@ -199,6 +201,7 @@ def upload_file(type_data):
                 return jsonify({'result': 'Tệp không hợp lệ'}), 400
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
+
             
 # # API upload file excel ROOM
 # @app.route('/api/upload/room', methods=['POST'])
