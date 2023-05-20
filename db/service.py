@@ -210,6 +210,15 @@ def delete_schedule_by_id(schedule_id):
     print(mycursor.rowcount, "record(s) deleted from SCHEDULES")
 
 # ROOMS 
+def get_list_rooms():
+    try:
+        sql = "SELECT * FROM rooms"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+
 def create_room(name, capacity, type):
     try:
         sql = "INSERT INTO rooms (name, capacity, type) VALUES (%s, %s, %s)"
@@ -231,6 +240,15 @@ def delete_all_room():
     print(mycursor.rowcount, "record(s) deleted from ROOMS")
 
 # TIMELESSONS
+def get_list_timelessons():
+    try:
+        sql = "SELECT * FROM timelessons"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+
 def create_timelesson(uuid, period):
     try:
         sql = "INSERT INTO timelessons (uuid, period) VALUES (%s, %s)"

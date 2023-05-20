@@ -162,6 +162,9 @@ def get_unique_filename(filename):
 
 # API upload file excel support 3 object course, room, timelesson
 @app.route('/api/upload/<type_data>', methods=['POST'])
+# http://127.0.0.1:5000/api/upload/course
+# http://127.0.0.1:5000/api/upload/room
+# http://127.0.0.1:5000/api/upload/timelesson
 def upload_file(type_data):
     # Kiểm tra xem request POST có chứa phần file không
     if 'file' not in request.files:
