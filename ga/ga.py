@@ -1,9 +1,8 @@
 import random
 from ga.population import Population
-from db.service import info_ga
-
+import os
 import pandas as pd
-# Hàm can thiệp 
+import time
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -48,7 +47,7 @@ def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_nam
     return pd.concat(dfs, ignore_index=True)
 
 class GA:
-    def __init__(self, population, mutation_rate, crossover_rate, elitism_rate):
+    def __init__(self, population, mutation_rate, crossover_rate, elitism_rate, courses, rooms, timelessons):
         self.population = population
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -57,10 +56,20 @@ class GA:
         self.unchanged_count = 0
         self.list_conflict = []
         self.list_generation = []
+        self.courses = courses
+        self.rooms = rooms
+        self.timelessons = timelessons
+        self.course_per_resourse = "{} / {}".format(len(self.courses), len(self.rooms) * len(self.timelessons))
+        
+    def get_course_per_resource(self):
+        return self.course_per_resourse
     
         
     def get_population(self):
         return self.population
+    
+    def get_unchanged_count(self):
+        return self.unchanged_count
         
     def evolve(self):
         # Biến đếm số thế hệ liên tiếp mà giá trị conflict không thay đổi
@@ -83,10 +92,7 @@ class GA:
         if current_conflict == self.prev_conflict:
             self.unchanged_count += 1  
             print('Số thế hệ không thay đổi conflict: ', self.unchanged_count) 
-        else:
-            self.unchanged_count = 0
             
-        
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict
         
@@ -128,7 +134,7 @@ class GA:
     
     def crossover_uniform(self, parent1, parent2):
         # Uniform Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         for i in range (0,len(schedule_crossover.get_classes())):
             if(random.random() > 0.5):
                 schedule_crossover.get_classes()[i] = parent1.get_classes()[i]
@@ -139,7 +145,7 @@ class GA:
     
     def crossover_single_point(self, parent1, parent2):
         # Single Point Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         crossover_point = random.randint(0, len(schedule_crossover.get_classes())-1)
         for i in range (0,len(schedule_crossover.get_classes())):
             if i < crossover_point:
@@ -150,7 +156,7 @@ class GA:
     
     def crossover_multi_point(self, parent1, parent2):
         #Multi-point Crossover
-        schedule_crossover = Population(1).get_schedules()[0]
+        schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         num_points = 40
         points = sorted(random.sample(range(len(schedule_crossover.get_classes())), num_points))
         index = 0
@@ -166,7 +172,7 @@ class GA:
 
     # Hàm đột biến
     def mutate(self, individual):
-        schedule_mutate = Population(1).get_schedules()[0]
+        schedule_mutate = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
         for i in range(len(schedule_mutate.get_classes())):
             if random.random() < self.mutation_rate:
                 individual.get_classes()[i] = schedule_mutate.get_classes()[i]
@@ -191,13 +197,14 @@ class GA:
                 best_fitness = mutated_fitness
         return best_individual
     
-    def run(self, num_generations):
+    def run(self, num_generations, start_time):
+        elapsed_time = time.time() - start_time
         for i in range(num_generations):
             print('Số thế hệ:', i)
-            print(info_ga)
+            print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
-            if self.population[0].get_conflict() == 0:
+            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= 150 and elapsed_time >= 300):
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
                 #add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
@@ -205,6 +212,6 @@ class GA:
                 break
             
                 
-        return self.population
+        return self.population, elapsed_time
     
     
