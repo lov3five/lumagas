@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: mysql
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+    ports:
+      - 3306:3306
+
