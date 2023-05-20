@@ -21,22 +21,8 @@ def hello():
 def index():
     return render_template('index.html')
 
-# GA Module support
-import time
-
-from prettytable import PrettyTable
-
-from ga.ga import GA
-from ga.population import Population
-from utils.display_prettytable import display_result
-from utils.sound_notification import sound_notification
-
 # TEST API
 """ GET """
-@app.route('/api/test', methods=['GET'])
-def test():
-    return jsonify({'result': 'success'}), 200
-
 @app.route('/api/data/<string:object>', methods=['GET'])
 def get_list_data_object_from_db(object):
     if object == 'courses':
@@ -71,13 +57,46 @@ def get_schedules():
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
-from ga.init_data import *
-    
+# GA Module support
+import time
+
+from prettytable import PrettyTable
+
+from ga.ga import GA
+from ga.population import Population
+from utils.display_prettytable import display_result
+from utils.sound_notification import sound_notification
+
+from ga.course import init_courses
+from ga.room import init_rooms
+from ga.timelesson import init_timelessons
+
+global info_ga
+info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
+global course_db, room_db, timelesson_db
+
 @app.route('/api/ga/start', methods=['GET'])
 def run_genetic_algorithm():
-    # Kiểm tra điều kiện dữ liệu
-    courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
-    is_passed, message = validate_data()
+    # Kiểm tra điều kiện dữ liệu đầu vào
+    courses_db = get_all_courses('courses')
+    rooms_db = get_list_data('rooms')
+    timelessons_db = get_list_data('timelessons')
+    if len(courses_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu lớp học phần (COURSES)"
+    elif len(rooms_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu phòng học (ROOMS)"
+    elif len(timelessons_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
+    elif len(courses_db) > (len(rooms_db) * len(timelessons_db)):
+        result_check = False, "[Số lượng lớp học phần (COURSES)] > [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
+    else:
+        result_check = True, "Dữ liệu đầu vào hợp lệ"
+        
+    is_passed, message = result_check
+    course_converted = init_courses(courses_db)
+    room_converted = init_rooms(rooms_db)
+    timelesson_converted = init_timelessons(timelessons_db)
+    
     if is_passed == False:
         return jsonify({'result': 'Dữ liệu không hợp lệ', 'message': message}), 400
     else:
@@ -99,11 +118,11 @@ def run_genetic_algorithm():
         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
         
-        population = Population(population_size, courses, rooms, timelessons).get_schedules()
+        population = Population(population_size, course_converted, room_converted, timelesson_converted).get_schedules()
         print("Cá thể tốt nhất trong quần thể ban đầu:")
         print(display_result(population))
     
-        ga = GA(population, mutation_rate, crossover_rate, elitism_rate, courses, rooms, timelessons)
+        ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
         population_result = ga.run(num_generations)
         unchanged_conflict_count = ga.get_unchanged_count()
@@ -225,7 +244,11 @@ def upload_file(type_data):
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             # Lưu file vào database
             save_file_upload_to_db(type_data, template_df, df)
-            return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
+            courses_db = get_all_courses('courses')
+            rooms_db = get_list_data('rooms')
+            timelessons_db = get_list_data('timelessons')
+            info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
+            return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename, 'info_ga': info_ga}), 200
         else: 
             if error_data is not None:
                 return jsonify({'result': error_data}), 400

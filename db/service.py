@@ -282,4 +282,3 @@ def courses_per_resource(courses, rooms, time_lessons):
         return ("courses_per_resource: {} / {}".format(len(courses), 0))
     return ("courses_per_resource: {} / {}".format(len(courses), len(rooms) * len(time_lessons)))
 
-info_ga = courses_per_resource(get_all_courses(), get_list_rooms(), get_list_timelessons())

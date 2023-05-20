@@ -1,8 +1,6 @@
 import random
 from ga.population import Population
-from db.service import info_ga
 import os
-
 import pandas as pd
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
@@ -60,6 +58,10 @@ class GA:
         self.courses = courses
         self.rooms = rooms
         self.timelessons = timelessons
+        self.course_per_resourse = "{} / {}".format(len(self.courses), len(self.rooms) * len(self.timelessons))
+        
+    def get_course_per_resource(self):
+        return self.course_per_resourse
     
         
     def get_population(self):
@@ -197,7 +199,7 @@ class GA:
     def run(self, num_generations):
         for i in range(num_generations):
             print('Số thế hệ:', i)
-            print(info_ga)
+            print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
             if self.population[0].get_conflict() == 0:
