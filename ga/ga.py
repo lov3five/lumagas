@@ -60,10 +60,13 @@ class GA:
         self.rooms = rooms
         self.timelessons = timelessons
         self.course_per_resourse = "{} / {}".format(len(self.courses), len(self.rooms) * len(self.timelessons))
+        self.is_done = False
         
     def get_course_per_resource(self):
         return self.course_per_resourse
     
+    def get_is_done(self):
+        return self.is_done
         
     def get_population(self):
         return self.population
@@ -198,13 +201,18 @@ class GA:
         return best_individual
     
     def run(self, num_generations, start_time):
-        elapsed_time = time.time() - start_time
+        # Đếm thời gian chạy
+        elapsed_time = 0
         for i in range(num_generations):
             print('Số thế hệ:', i)
+            # Tính thời gian đã trôi qua
+            current_time = time.time()
+            elapsed_time = current_time - start_time
             print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
             if self.population[0].get_conflict() == 0 or (self.unchanged_count >= 150 and elapsed_time >= 300):
+                self.is_done = True
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
                 #add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')

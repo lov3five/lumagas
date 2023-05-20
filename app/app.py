@@ -124,8 +124,15 @@ def run_genetic_algorithm():
     
         ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result, running_time = ga.run(num_generations, start_time)
+        population_result, eslapse_time = ga.run(num_generations, start_time)
+        end_time = time.time()
+        running_time = end_time - start_time
         unchanged_conflict_count = ga.get_unchanged_count()
+        if ga.get_is_done() == True:
+            # Âm thanh thông báo hoàn thành trong 1s
+            sound_notification()
+            # Tắt sau 1s
+            time.sleep(1)
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
         for schedule in best_schedule:
@@ -143,28 +150,27 @@ def run_genetic_algorithm():
         print("Best schedule: ", best_schedule[0])
         
         print("Running time: ", running_time)
-        if ga.get_population()[0].get_conflict() == 0 or (unchanged_conflict_count > 150 and running_time > 300) :
-            #sound_notification()
-            population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
-            print('Best schedule fitness: ', population_result[0].get_fitness())
-            display_result(population_result)
-            # Lưu những kết quả tốt nhất vào database
-            # Lưu schedule vào database
-            # Lấy những thông tin cần lưu
-            fitness = population_result[0].get_fitness()
+        #sound_notification()
+        population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
+        print('Best schedule fitness: ', population_result[0].get_fitness())
+        display_result(population_result)
+        # Lưu những kết quả tốt nhất vào database
+        # Lưu schedule vào database
+        # Lấy những thông tin cần lưu
+        fitness = population_result[0].get_fitness()
         
-            create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
-            schedule_id = get_schedule_id_newest()
-            # Lưu classes vào database
-            for i in range(0, len(population_result[0].get_classes())):
-                course_id = population_result[0].get_classes()[i].get_course().get_course_id()
-                room_id = population_result[0].get_classes()[i].get_room().get_room_id()
-                timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
-                create_classes(course_id, room_id, timelesson_id, schedule_id)
-            # Nếu các classes không lưu vào db, xóa schedule vừa lưu
-            if get_list_classes_by_schedule_id(schedule_id) == []:
-                delete_schedule_by_id(schedule_id)
-        return jsonify({'result': 'success', 'unchanged_conflict_count': unchanged_conflict_count}), 200
+        create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
+        schedule_id = get_schedule_id_newest()
+        # Lưu classes vào database
+        for i in range(0, len(population_result[0].get_classes())):
+            course_id = population_result[0].get_classes()[i].get_course().get_course_id()
+            room_id = population_result[0].get_classes()[i].get_room().get_room_id()
+            timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
+            create_classes(course_id, room_id, timelesson_id, schedule_id)
+        # Nếu các classes không lưu vào db, xóa schedule vừa lưu
+        if get_list_classes_by_schedule_id(schedule_id) == []:
+            delete_schedule_by_id(schedule_id)
+    return jsonify({'result': 'success', 'unchanged_conflict_count': unchanged_conflict_count}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
 #@app.route('/api/ga/result-analysis', methods=['GET'])
