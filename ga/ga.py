@@ -1,9 +1,9 @@
 import random
 from ga.population import Population
 from db.service import info_ga
+import os
 
 import pandas as pd
-# Hàm can thiệp 
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -86,7 +86,6 @@ class GA:
         else:
             self.unchanged_count = 0
             
-        
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict
         

@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LUMAGAS - Timetable Generator GAs</title>
     <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="icon" href="/static/favicon.ico" />
     <script src="/static/js/tailwindcss.js"></script>
     <script defer src="/static/js/alpinejs@.min.js"></script>
   </head>
   <body
     x-data="{
     file: null,
+    isOpen: false,isOpen2: false,isOpen3: false,isOpen4: false,isOpen5: false,
+    schedules:'',
     uploadFile: function() {
       if (!this.file) return;
 
@@ -32,18 +35,45 @@
         this.file = null;
         alert(data.message);
       })
-    }
+    },
+    getSchedule: function(){
+      fetch('/api/schedule', {
+        method: 'GET',
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+            }
+            return response.json();
+          })
+        .then(data => {
+          this.schedules = data.result;
+          alert('Chạy thuật toán thành công!')
+          })
+        },
+    runGa: function(){
+      fetch('/api/ga/start', {
+        method: 'GET',
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+            }
+            return response.json();
+          })
+        .then(data => {
+          if(data.result == 'success'){
+            this.isOpen3 = false;
+            this.getSchedule();
+            }
+          })
+        }
   }">
     <div class="main">
       <h1 class="mb-10 text-center text-3xl font-extrabold text-gray-900 md:text-5xl lg:text-6xl">
-        <span class="text-transparent bg-clip-text bg-gradient-to-r to-green-600 from-green-400"
-          >LUMAGAS</span
-        >
+        <span class="text-transparent bg-clip-text bg-gradient-to-r to-green-600 from-green-400">LUMAGAS</span>
       </h1>
-      <div
-        id="tool"
-        class="flex justify-center gap-5"
-        x-data="{ isOpen: false,isOpen2: false,isOpen3: false,isOpen4: false,isOpen5: false }">
+      <div id="tool" class="flex justify-center gap-5">
         <div>
           <div class="box" @click="isOpen = true">
             <svg
@@ -248,7 +278,7 @@
         </div>
 
         <div>
-          <div class="box" @click="isOpen3 = true">
+          <div class="box" @click="isOpen3 = true;runGa()">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -294,7 +324,7 @@
                 </div>
 
                 <button
-                  @click="isOpen3= false;"
+                  @click="isOpen3 = false;"
                   class="sr-only w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                   Close
                 </button>
@@ -500,28 +530,19 @@
               </tr>
             </thead>
             <tbody>
-              <tr class="bg-white border-b hover:bg-gray-50">
-                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">4203003098</th>
-                <td class="px-6 py-4">Thực tập doanh nghiệp</td>
-                <td class="px-6 py-4">DHCNTT15B</td>
-                <td class="px-6 py-4">Lương Văn Mạnh - Mã GV</td>
-                <td class="px-6 py-4">A.01</td>
-                <td class="px-6 py-4">Thứ 2 Tiết 1-3</td>
-                <td class="px-6 py-4 text-right">
-                  <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
-                </td>
-              </tr>
-              <tr class="bg-white border-b hover:bg-gray-50">
-                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">4203003098</th>
-                <td class="px-6 py-4">Thực tập doanh nghiệp</td>
-                <td class="px-6 py-4">DHCNTT15B</td>
-                <td class="px-6 py-4">Lương Văn Mạnh - Mã GV</td>
-                <td class="px-6 py-4">A.01</td>
-                <td class="px-6 py-4">Thứ 2 Tiết 1-3</td>
-                <td class="px-6 py-4 text-right">
-                  <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
-                </td>
-              </tr>
+              <template x-for="item in schedules" :key="item.maHocPhan">
+                <tr class="bg-white border-b hover:bg-gray-50">
+                  <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap" x-text="item.maHocPhan"></th>
+                  <td class="px-6 py-4" x-text="item.tenHocPhan"></td>
+                  <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
+                  <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
+                  <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
+                  <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>
+                  <td class="px-6 py-4 text-right">
+                    <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
+                  </td>
+                </tr>
+            </template>
             </tbody>
           </table>
         </div>
