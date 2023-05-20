@@ -1,7 +1,6 @@
 import os
 
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for)
 from werkzeug.utils import secure_filename
 app = Flask(__name__, static_url_path='/static')
 
@@ -296,7 +295,33 @@ from excel.write_excel import export_to_excel
 #add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
 from datetime import datetime as dt
 
-@app.route('/api/export/schedule', methods=['GET'])
+# @app.route('/api/export/schedule', methods=['GET'])
+# def export_file():
+#     result = get_list_classes_for_export_schedule_best()
+#     columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
+#                'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
+#                'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+
+#     df = pd.DataFrame(result, columns=columns)
+
+#     # Tạo tên file tự động dựa trên thời gian
+#     current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+#     file_name = f"schedule_fitness_{current_time}.xlsx"
+
+#     # Tạo đường dẫn cho file xuất
+#     file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
+
+#     # Xuất DataFrame thành file Excel
+#     df.to_excel(file_path, index=False)
+
+#     # Kiểm tra xem file có tồn tại hay không
+#     if os.path.isfile(file_path):
+#         # Trả về đường dẫn của file để người dùng tải xuống
+#         return jsonify({'file_url': file_path})
+#     else:
+#         return jsonify({'result': 'File not found'}), 404
+
+@app.route('/api/export/schedule/', methods=['GET'])
 def export_file():
     result = get_list_classes_for_export_schedule_best()
     columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
@@ -309,7 +334,7 @@ def export_file():
     current_time = dt.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"schedule_fitness_{current_time}.xlsx"
 
-    # Tạo đường dẫn cho file xuất
+    # Tạo đường dẫn tạm thời cho file xuất
     file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
 
     # Xuất DataFrame thành file Excel
@@ -317,8 +342,8 @@ def export_file():
 
     # Kiểm tra xem file có tồn tại hay không
     if os.path.isfile(file_path):
-        # Trả về đường dẫn của file để người dùng tải xuống
-        return jsonify({'file_url': file_path})
+        # Trả về file trực tiếp cho người dùng để tải xuống
+        return send_from_directory(app.config['DOWNLOAD_FOLDER'],file_name, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
 
