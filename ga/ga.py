@@ -1,9 +1,8 @@
 import random
 from ga.population import Population
-from db.service import info_ga
 import os
-
 import pandas as pd
+import time
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -60,6 +59,10 @@ class GA:
         self.courses = courses
         self.rooms = rooms
         self.timelessons = timelessons
+        self.course_per_resourse = "{} / {}".format(len(self.courses), len(self.rooms) * len(self.timelessons))
+        
+    def get_course_per_resource(self):
+        return self.course_per_resourse
     
         
     def get_population(self):
@@ -194,13 +197,14 @@ class GA:
                 best_fitness = mutated_fitness
         return best_individual
     
-    def run(self, num_generations):
+    def run(self, num_generations, start_time):
+        elapsed_time = time.time() - start_time
         for i in range(num_generations):
             print('Số thế hệ:', i)
-            print(info_ga)
+            print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
-            if self.population[0].get_conflict() == 0:
+            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= 150 and elapsed_time >= 300):
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
                 #add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
@@ -208,6 +212,6 @@ class GA:
                 break
             
                 
-        return self.population
+        return self.population, elapsed_time
     
     

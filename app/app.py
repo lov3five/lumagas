@@ -1,5 +1,7 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, jsonify, render_template, send_from_directory
+
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
 from werkzeug.utils import secure_filename
 app = Flask(__name__, static_url_path='/static')
 
@@ -19,49 +21,82 @@ def hello():
 def index():
     return render_template('index.html')
 
+# TEST API
+""" GET """
+@app.route('/api/data/<string:object>', methods=['GET'])
+def get_list_data_object_from_db(object):
+    if object == 'courses':
+        data = get_list_data('courses')
+    elif object == 'rooms':
+        data = get_list_data('rooms')
+    elif object == 'timelessons':
+        data = get_list_data('timelessons')
+    else:
+        return jsonify({'result': 'Không tìm thấy dữ liệu'}), 404
+    return jsonify({'result': data}), 200
+
+# API get list of schedule best fitness from database
+from db.service import get_list_classes_by_schedule_id_newest
+
+
+@app.route('/api/schedule', methods=['GET'])
+def get_schedules():
+    schedule = []
+    for i in range(0, len(get_list_classes_by_schedule_id_newest())):
+        schedule.append({
+            'maHocPhan': get_list_classes_by_schedule_id_newest()[i][0],
+            'tenHocPhan': get_list_classes_by_schedule_id_newest()[i][1],
+            'tenLopHoc': get_list_classes_by_schedule_id_newest()[i][2],
+            'tenGiangVien': get_list_classes_by_schedule_id_newest()[i][3],
+            'tenPhongHoc': get_list_classes_by_schedule_id_newest()[i][4],
+            'thoiGianHoc': get_list_classes_by_schedule_id_newest()[i][5],
+            'soLuongSinhVien': get_list_classes_by_schedule_id_newest()[i][6],
+            'sucChua': get_list_classes_by_schedule_id_newest()[i][7],
+        })
+    return jsonify({'result': schedule}), 200
+
+# API start GA algorithm
+#@app.route('/api/start-ga', methods['POST'])
 # GA Module support
 import time
+
+from prettytable import PrettyTable
 
 from ga.ga import GA
 from ga.population import Population
 from utils.display_prettytable import display_result
 from utils.sound_notification import sound_notification
-from prettytable import PrettyTable
 
-# TEST API
-""" GET """
-@app.route('/api/test', methods=['GET'])
-def test():
-    return jsonify({'result': 'success'}), 200
+from ga.course import init_courses
+from ga.room import init_rooms
+from ga.timelesson import init_timelessons
 
-# API get list of schedule best fitness from database
-from db.service import get_list_classes_by_schedule_id_newest
+global info_ga
+info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
+global course_db, room_db, timelesson_db
 
-@app.route('/api/schedule', methods=['GET'])
-def get_schedules():
-    result = get_list_classes_by_schedule_id_newest()
-    schedule = []
-    for i in range(0, len(result)):
-        schedule.append({
-            'maHocPhan': result[i][0],
-            'tenHocPhan': result[i][1],
-            'tenLopHoc': result[i][2],
-            'tenGiangVien': result[i][3],
-            'tenPhongHoc': result[i][4],
-            'thoiGianHoc': result[i][5],
-        })
-    return jsonify({'result': schedule, 'data': result}), 200
-
-# API start GA algorithm
-#@app.route('/api/start-ga', methods['POST'])
-from ga.init_data import *
-    
 @app.route('/api/ga/start', methods=['GET'])
 def run_genetic_algorithm():
-    # Kiểm tra điều kiện dữ liệu
-    courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
-    print("============================================", courses, rooms, timelessons)
-    is_passed, message = validate_data()
+    # Kiểm tra điều kiện dữ liệu đầu vào
+    courses_db = get_all_courses('courses')
+    rooms_db = get_list_data('rooms')
+    timelessons_db = get_list_data('timelessons')
+    if len(courses_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu lớp học phần (COURSES)"
+    elif len(rooms_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu phòng học (ROOMS)"
+    elif len(timelessons_db) == 0:
+        result_check = False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
+    elif len(courses_db) > (len(rooms_db) * len(timelessons_db)):
+        result_check = False, "[Số lượng lớp học phần (COURSES)] > [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
+    else:
+        result_check = True, "Dữ liệu đầu vào hợp lệ"
+        
+    is_passed, message = result_check
+    course_converted = init_courses(courses_db)
+    room_converted = init_rooms(rooms_db)
+    timelesson_converted = init_timelessons(timelessons_db)
+    
     if is_passed == False:
         return jsonify({'result': 'Dữ liệu không hợp lệ', 'message': message}), 400
     else:
@@ -78,21 +113,18 @@ def run_genetic_algorithm():
         # Tỉ lệ lai ghép
         crossover_rate = 0.85  # 0.6 - 0.9
         elitism_rate = 0.1 # 0.05 - 0.1
-        
-        # Lấy dữ liệu từ user
-        courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
-        print("============================================")
+
         # Tạo quần thể ban đầu
-        # Bắt đầu tính thời gian chạy thuật toán
+         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
         
-        population = Population(population_size, courses, rooms, timelessons).get_schedules()
+        population = Population(population_size, course_converted, room_converted, timelesson_converted).get_schedules()
         print("Cá thể tốt nhất trong quần thể ban đầu:")
         print(display_result(population))
     
-        ga = GA(population, mutation_rate, crossover_rate, elitism_rate, courses, rooms, timelessons)
+        ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result = ga.run(num_generations)
+        population_result, running_time = ga.run(num_generations, start_time)
         unchanged_conflict_count = ga.get_unchanged_count()
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
@@ -110,12 +142,7 @@ def run_genetic_algorithm():
 
         print("Best schedule: ", best_schedule[0])
         
-        # Kết thúc tính thời gian chạy thuật toán
-        end_time = time.time()
-        
-        # Tính thời gian chạy thuật toán
-        running_time = end_time - start_time
-        print("Time: ", end_time - start_time)
+        print("Running time: ", running_time)
         if ga.get_population()[0].get_conflict() == 0 or (unchanged_conflict_count > 150 and running_time > 300) :
             #sound_notification()
             population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
@@ -154,8 +181,10 @@ app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 
 import pandas as pd
-from excel.read_excel import check_file_data_input, save_file_upload_to_db
+
 from excel.config_api_template import check_api_and_select_template_to_compare
+from excel.read_excel import check_file_data_input, save_file_upload_to_db
+
 
 # Kiểm tra file có đúng định dạng không
 def allowed_file(filename):
@@ -210,7 +239,11 @@ def upload_file(type_data):
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             # Lưu file vào database
             save_file_upload_to_db(type_data, template_df, df)
-            return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename}), 200
+            courses_db = get_all_courses('courses')
+            rooms_db = get_list_data('rooms')
+            timelessons_db = get_list_data('timelessons')
+            info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
+            return jsonify({'result': 'Tệp đã tải lên thành công với tên: ' + unique_filename, 'info_ga': info_ga}), 200
         else: 
             if error_data is not None:
                 return jsonify({'result': error_data}), 400
