@@ -1,19 +1,14 @@
-from db.service import courses_db, rooms_db, timelessons_db
-
-from ga.course import init_courses
-from ga.room import init_rooms
-from ga.timelesson import init_timelessons
 from ga.schedule import Schedule
 
-courses = init_courses(courses_db)
-rooms = init_rooms(rooms_db)
-timelessons = init_timelessons(timelessons_db)
-
 class Population:
-    def __init__(self, population_size):
+    def __init__(self, population_size=0, courses=None, rooms=None, timelessons=None):
         self.population_size = population_size
-        self.schedules = [Schedule(courses, rooms, timelessons).init_schedule() for _ in range(population_size)]
-        self.fittest = None
+        if population_size > 0:
+            self.schedules = [Schedule(courses, rooms, timelessons).init_schedule() for _ in range(population_size)]
+            self.fittest = None
+        else:
+            self.schedules = []
+            self.fittest = None
         
     def get_schedules(self):
         return self.schedules
