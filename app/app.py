@@ -54,32 +54,14 @@ def get_schedules():
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
-from ga.course import init_courses
-from ga.room import init_rooms
-from ga.timelesson import init_timelessons
-
-def validate_data(courses, rooms, timelessons):
-    if courses == []:
-        return False, "Bạn chưa import dữ liệu lớp học phần (COURSES)"
-    if rooms == []:
-        return False, "Bạn chưa import dữ liệu phòng học (ROOMS)"
-    if timelessons == []:
-        return False, "Bạn chưa import dữ liệu thời gian học (TIMELESSONS)"
-    if len(courses) > (len(rooms) * len(timelessons)):
-        return False, "[Số lượng lớp học phần (COURSES)] > [số lượng phòng học (ROOMS)] x [số lượng thời gian học (TIMELESSONS)]"
-    else:
-        return True, "OK"
-
-def get_data_from_user():
-    courses = init_courses(courses_db)
-    rooms = init_rooms(rooms_db)
-    timelessons = init_timelessons(timelessons_db)
-    return courses, rooms, timelessons
+from ga.init_data import *
     
 @app.route('/api/ga/start', methods=['GET'])
 def run_genetic_algorithm():
     # Kiểm tra điều kiện dữ liệu
-    is_passed, message = validate_data(courses_db, rooms_db, timelessons_db)
+    courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
+    print("============================================", courses, rooms, timelessons)
+    is_passed, message = validate_data()
     if is_passed == False:
         return jsonify({'result': 'Dữ liệu không hợp lệ', 'message': message}), 400
     else:
@@ -98,7 +80,8 @@ def run_genetic_algorithm():
         elitism_rate = 0.1 # 0.05 - 0.1
         
         # Lấy dữ liệu từ user
-        courses, rooms, timelessons = get_data_from_user()
+        courses, rooms, timelessons = get_data_input_of_user_from_db_and_init()
+        print("============================================")
         # Tạo quần thể ban đầu
         # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
@@ -214,9 +197,9 @@ def upload_file(type_data):
     if request.method == 'POST' and file and allowed_file(file.filename):
         # Đọc file mẫu dựa trên loại dữ liệu
         template_df = check_api_and_select_template_to_compare(type_data)
-        if template_df is None:
-            return jsonify({'result': 'Loại dữ liệu không hợp lệ'}), 400
         df = pd.read_excel(file)
+        if df is None:
+            return jsonify({'result': 'Loại dữ liệu không hợp lệ'}), 400
         # Kiểm tra file đầu vào và trả lỗi 
         is_valid, error_data = check_file_data_input(df, template_df)
         # is_valid = True | False
@@ -237,11 +220,6 @@ def upload_file(type_data):
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
 
             
-# # API upload file excel ROOM
-# @app.route('/api/upload/room', methods=['POST'])
-
-# # API upload file excel TIMELESSON
-# @app.route('/api/upload/timelesson', methods=['POST'])
 
 # API download file
 @app.route('/api/download/<filename>', methods=['GET'])

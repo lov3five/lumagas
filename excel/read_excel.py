@@ -63,11 +63,10 @@ def read_and_save_course_to_db(template_df, df):
         delete_all_classes()
         delete_all_course()
     # Đọc dữ liệu từ tệp tin Excel
-    if course_df is not None:
-        expected_columns = list(course_template_df.columns)
+    expected_columns = list(course_template_df.columns)
         # Thêm các danh sách các khóa học vào db
-        for index, row in course_df.iterrows():
-            create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]] ,row[expected_columns[6]])
+    for index, row in course_df.iterrows():
+        create_course(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]], row[expected_columns[3]], row[expected_columns[4]], row[expected_columns[5]] ,row[expected_columns[6]])
     
             
 #Đọc file rooms và lưu vào db
@@ -80,11 +79,10 @@ def read_and_save_room_to_db(template_df, df):
     if len(get_list_rooms()) > 0:
         delete_all_classes()
         delete_all_room()
-    if room_df is not None:
-        expected_columns = list(room_template_df.columns)
-        # Thêm các danh sách các phòng học vào db
-        for index, row in room_df.iterrows():
-                create_room(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]])
+    expected_columns = list(room_template_df.columns)
+    # Thêm các danh sách các phòng học vào db
+    for index, row in room_df.iterrows():
+        create_room(row[expected_columns[0]], row[expected_columns[1]], row[expected_columns[2]])
                 
 def read_and_save_timelesson_to_db(template_df, df):
     # Đọc tệp tin template.xlsx
@@ -95,12 +93,11 @@ def read_and_save_timelesson_to_db(template_df, df):
     if len(get_list_timelessons()) != 0:
         delete_all_classes()
         delete_all_timelesson()
-    if timelesson_df:
-        expected_columns = list(timelesson_template_df.columns)
-        print(expected_columns)
-        # Thêm các danh sách các thời gian học vào db
-        for index, row in timelesson_df.iterrows():
-                create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
+    expected_columns = list(timelesson_template_df.columns)
+    print(expected_columns)
+    # Thêm các danh sách các thời gian học vào db
+    for index, row in timelesson_df.iterrows():
+        create_timelesson(row[expected_columns[0]], row[expected_columns[1]])
             
 
 def save_file_upload_to_db(type_data, template_df, df):
