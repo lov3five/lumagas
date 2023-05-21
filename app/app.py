@@ -315,6 +315,10 @@ from datetime import datetime as dt
 @app.route('/api/schedule', methods=['GET'])
 def get_best_schedule():
     result = get_list_classes_for_export_schedule_best()
+    
+    # Kiểm tra xung đột giữa các lớp học
+    #for i in range
+    
     schedule = []
     for i in range(len(result)):
         schedule.append({

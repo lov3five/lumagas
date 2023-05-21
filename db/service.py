@@ -223,7 +223,14 @@ def get_list_classes_by_instructor_id(instructor_id):
     except Exception as e:
         print('Error: ' + str(e))
         
-def get_
+def get_room_id_from_list_classes():
+    try:
+        sql = "SELECT DISTINCT room_id FROM classes"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
         
 
 
