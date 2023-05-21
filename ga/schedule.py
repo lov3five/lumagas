@@ -67,9 +67,9 @@ class Schedule:
                     if classes[i].get_room() == classes[j].get_room():
                         self.conflict += 1
                 # Kiểm tra 1 giảng viên có dạy 2 lớp cùng 1 lúc
-                    if classes[i].get_course().get_instructor_id() == classes[j].get_course().get_instructor_id():
+                    elif classes[i].get_course().get_instructor_id() == classes[j].get_course().get_instructor_id():
                         self.conflict += 1
                 # # Kiểm tra nếu 1 lớp học có 2 môn học cùng 1 thời điểm
-                    if classes[i].get_course().get_classroom_id() == classes[j].get_course().get_classroom_id():
+                    elif classes[i].get_course().get_classroom_id() == classes[j].get_course().get_classroom_id():
                         self.conflict += 1
         return 1 / (self.conflict + 1)

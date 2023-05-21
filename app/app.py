@@ -315,12 +315,35 @@ from datetime import datetime as dt
 @app.route('/api/schedule', methods=['GET'])
 def get_best_schedule():
     result = get_list_classes_for_export_schedule_best()
-    
-    # Kiểm tra xung đột giữa các lớp học
-    #for i in range
-    
     schedule = []
+    number_conflict = 0
     for i in range(len(result)):
+        is_conflict = False
+        type_conflict = ''
+        # Kiểm tra sức chứa
+        if result[i][6] > result[i][8]:
+            number_conflict += 1
+            type_conflict = 'Xung đột sức chứa'
+            is_conflict = True
+
+        for j in range(i+1, len(result)):
+            # Tại cùng 1 thời gian học
+            if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
+                if result[i][7] == result[j][7]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột phòng học'
+                    is_conflict = True
+                # 1 giảng viên dạy 2 lớp
+                if result[i][2] == result[j][2]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột giảng viên'
+                    is_conflict = True
+                # 1 lớp học 2 môn
+                if result[i][4] == result[j][4]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột môn học'
+                    is_conflict = True
+                
         schedule.append({
             'maLopHocPhan': result[i][0],
             'tenLopHoc': result[i][1],
@@ -333,9 +356,11 @@ def get_best_schedule():
             'sucChua': result[i][8],
             'loaiPhong': result[i][9],
             'maUUID': result[i][10],
-            'thoiGianHoc': result[i][11]
+            'thoiGianHoc': result[i][11],
+            'coXungDot': is_conflict,
+            'loaiXungDot': type_conflict
         })
-    return jsonify({'result': schedule}), 200
+    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict}), 200
 
 # API get schedule by tenLopHoc
 @app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
