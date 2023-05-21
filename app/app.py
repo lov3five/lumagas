@@ -333,6 +333,53 @@ def get_best_schedule():
         })
     return jsonify({'result': schedule}), 200
 
+# API get schedule by tenLopHoc
+@app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
+def get_schedule_by_class_name(classroom_id):
+    result = get_list_classes_by_classroom_id(classroom_id)
+    schedule = []
+    for i in range(len(result)):
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11]
+        })
+    return jsonify({'result': schedule, 'filter': 'LỚP HỌC'}), 200
+
+#API get schedule by maGiangVien
+@app.route('/api/schedule/instructor/<string:instructor_id>', methods=['GET'])
+def get_schedule_by_instructor_id(instructor_id):
+    result = get_list_classes_by_instructor_id(instructor_id)
+    schedule = []
+    for i in range(len(result)):
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11]
+        })
+    return jsonify({'result': schedule, 'filter': 'GIẢNG VIÊN'}), 200
+
+
+
+
 
 @app.route('/api/ga/export/schedule', methods=['GET'])
 def export_file():
