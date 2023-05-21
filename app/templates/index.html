@@ -11,38 +11,17 @@
     <script defer src="/static/js/alpinejs@.min.js"></script>
   </head>
   <body
-  x-data="{
+    x-data="{
     fileCourse: null,
     fileRoom: null,
     fileTimeLesson: null,
-    isOpen: false,
-    isOpen2: false,
-    isOpen3: false,
-    isOpen4: false,
-    isOpen5: false,
-    schedules: '',
-    disabled: false,
-    disabled2: false,
-    disabled3: false,
-    resultAnalysis: {
-      conflict: 0,
-      createdAt: '',
-      crossoverRate: 0,
-      fitness: '',
-      mutationRate: 0,
-      populationSize: 0,
-      runningTime: 0,
-      scheduleId: 0
-    },
-
+    isOpen: false,isOpen2: false,isOpen3: false,isOpen4: false,isOpen5: false,
+    schedules:'',
+    disabled: false,disabled2: false,disabled3: false,
     uploadFile: function(route) {
-      let fileTemp = this.fileCourse;
-      if (route == 'room') {
-        fileTemp = this.fileRoom;
-      }
-      if (route == 'timelesson') {
-        fileTemp = this.fileTimeLesson;
-      }
+      let fileTemp = this.fileCourse
+      if(route == 'room'){fileTemp = this.fileRoom}
+      if(route == 'timelesson'){fileTemp = this.fileTimeLesson}
       if (!fileTemp) return;
       let formData = new FormData();
       formData.append('file', fileTemp);
@@ -51,107 +30,62 @@
         body: formData
       })
       .then(response => {
-        if (response.status == 400) {
-          alert('Tệp không hợp lệ!');
-          if (route == 'course') {
-            $refs.fileInput.value = null;
-          }
-          if (route == 'room') {
-            $refs.fileInput1.value = null;
-          }
-          if (route == 'timelesson') {
-            $refs.fileInput2.value = null;
-          }
+        if(response.status == 400){
+          alert('Tệp không hợp lệ!')
+          if(route == 'course'){$refs.fileInput.value = null}
+          if(route == 'room'){$refs.fileInput1.value = null}
+          if(route == 'timelesson'){$refs.fileInput2.value = null}
         }
-        if (response.status == 200) {
-          if (route == 'course') {
-            this.disabled = true;
-          }
-          if (route == 'room') {
-            this.disabled2 = true;
-          }
-          if (route == 'timelesson') {
-            this.disabled3 = true;
-          }
+        if(response.status == 200){
+          if(route == 'course'){this.disabled = true;}
+          if(route == 'room'){this.disabled2 = true;}
+          if(route == 'timelesson'){this.disabled3 = true}
         }
         return response.json();
       })
       .then(data => {
-        if (route == 'room') {
-          this.fileRoom = null;
-        }
-        if (route == 'timelesson') {
-          this.fileTimeLesson = null;
-        }
-        if (route == 'course') {
-          this.fileCourse = null;
-        }
+        if(route == 'room'){this.fileRoom = null}
+        if(route == 'timelesson'){this.fileTimeLesson = null}
+        if(route == 'timelesson'){this.fileCourse = null}
         alert(data.result);
-      });
+      })
     },
-
-    getSchedule: function() {
-      fetch('/api/ga/best-schedule', {
-        method: 'GET'
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        this.schedules = data.result;
-        alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.');
-      });
-    },
-
-    runGa: function() {
-      fetch('/api/ga/start', {
-        method: 'GET'
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.result == 'success') {
-          this.isOpen3 = false;
-          this.getSchedule();
-        }
-      });
-    },
-
-    getResultAnalysis: function() {
-      fetch('/api/ga/result-analysis', {
-        method: 'GET'
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        this.resultAnalysis = data.data;
-        console.log(this.resultAnalysis);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    }
-  }"
->
+    getSchedule: function(){
+      fetch('/api/schedule', {
+        method: 'GET',
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+            }
+            return response.json();
+          })
+        .then(data => {
+          this.schedules = data.result;
+          alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.')
+          })
+        },
+        runGa: function(){
+          fetch('/api/ga/start', {
+            method: 'GET',
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(response.statusText);
+                }
+                return response.json();
+              })
+            .then(data => {
+              if(data.result == 'success'){
+                this.isOpen3 = false;
+                this.getSchedule();
+                }
+              })
+          },
+  }">
     <div class="main">
-      <h1
-        class="mb-10 text-center text-3xl font-extrabold text-gray-900 md:text-5xl lg:text-6xl"
-      >
-        <span
-          class="text-transparent bg-clip-text bg-gradient-to-r to-green-600 from-green-400"
-          >LUMAGAS</span
-        >
+      <h1 class="mb-10 text-center text-3xl font-extrabold text-gray-900 md:text-5xl lg:text-6xl">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r to-green-600 from-green-400">LUMAGAS</span>
       </h1>
       <div id="tool" class="flex justify-center gap-5">
         <div>
@@ -162,121 +96,86 @@
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="w-6 h-6"
-            >
+              class="w-6 h-6">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              />
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
             Import excel
           </div>
           <!-- Modal -->
           <div x-show="isOpen" class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4">
-              <div
-                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-              ></div>
-              <div
-                class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-xl sm:w-full"
-              >
+              <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+              <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-xl sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div class="sm:flex sm:items-start">
                     <div
-                      class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"
-                    >
+                      class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                       1
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                      <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        Bước 1
-                      </h3>
+                      <h3 class="text-lg leading-6 font-medium text-gray-900">Bước 1</h3>
                       <div class="mt-2">
                         <p class="text-sm text-gray-500">
-                          Bạn vui lòng tải templates này về và điền các thông
-                          tin chính xác vào mẫu.
+                          Bạn vui lòng tải templates này về và điền các thông tin chính xác vào mẫu.
                         </p>
-                        <a
-                          href="/static/file/templates/course_template.xlsx"
-                          download
-                        >
+                        <a href="/static/file/templates/course_template.xlsx" download>
                           <button
                             type="button"
-                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2"
-                          >
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke-width="1.5"
                               stroke="currentColor"
-                              class="w-6 h-6"
-                            >
+                              class="w-6 h-6">
                               <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                              />
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
-                            <span class="ml-1 min-w-[120px]"
-                              >Course Templates.xlsx</span
-                            >
+                            <span class="ml-1 min-w-[120px]">Course Templates.xlsx</span>
                           </button>
                         </a>
-                        <a
-                          href="/static/file/templates/room_template.xlsx"
-                          download
-                        >
+                        <a href="/static/file/templates/room_template.xlsx" download>
                           <button
                             type="button"
-                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2"
-                          >
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke-width="1.5"
                               stroke="currentColor"
-                              class="w-6 h-6"
-                            >
+                              class="w-6 h-6">
                               <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                              />
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
-                            <span class="ml-1 min-w-[120px]"
-                              >Room Templates.xlsx</span
-                            >
+                            <span class="ml-1 min-w-[120px]">Room Templates.xlsx</span>
                           </button>
                         </a>
-                        <a
-                          href="/static/file/templates/timelesson_template.xlsx"
-                          download
-                        >
+                        <a href="/static/file/templates/timelesson_template.xlsx" download>
                           <button
                             type="button"
-                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2"
-                          >
+                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center mt-2">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke-width="1.5"
                               stroke="currentColor"
-                              class="w-6 h-6"
-                            >
+                              class="w-6 h-6">
                               <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                              />
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
-                            <span class="ml-1 min-w-[120px]"
-                              >Timelesson Templates.xlsx</span
-                            >
+                            <span class="ml-1 min-w-[120px]">Timelesson Templates.xlsx</span>
                           </button>
                         </a>
                       </div>
@@ -284,22 +183,13 @@
                   </div>
                   <div class="mt-8 sm:flex sm:items-start w-full">
                     <div
-                      class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"
-                    >
+                      class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                       2
                     </div>
-                    <div
-                      class="mt-2 text-center sm:mt-0 sm:ml-4 sm:text-left sm:w-full"
-                    >
-                      <h3
-                        class="mt-2 text-lg leading-6 font-medium text-gray-900"
-                      >
-                        Bước 2
-                      </h3>
+                    <div class="mt-2 text-center sm:mt-0 sm:ml-4 sm:text-left sm:w-full">
+                      <h3 class="mt-2 text-lg leading-6 font-medium text-gray-900">Bước 2</h3>
                       <div class="mt-2">
-                        <p class="text-md text-gray-500 animate-bounce">
-                          Tải file excel đã điền thông tin vào đây.
-                        </p>
+                        <p class="text-md text-gray-500 animate-bounce">Tải file excel đã điền thông tin vào đây.</p>
                         <label class="block mt-4 text-sm">
                           Nhập file <strong>Course template</strong> ở đây:
                           <input
@@ -310,8 +200,7 @@
                             maxlength="1048576"
                             x-on:change="fileCourse = $event.target.files[0]"
                             type="file"
-                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-                          />
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
                         </label>
                         <label class="block mt-4 text-sm">
                           Nhập file <strong>Room template</strong> ở đây:
@@ -323,8 +212,7 @@
                             maxlength="1048576"
                             x-on:change="fileRoom = $event.target.files[0]"
                             type="file"
-                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-                          />
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
                         </label>
                         <label class="block mt-4 text-sm">
                           Nhập file <strong>Timelesson template</strong> ở đây:
@@ -336,41 +224,33 @@
                             maxlength="1048576"
                             x-on:change="fileTimeLesson = $event.target.files[0]"
                             type="file"
-                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-                          />
+                            class="mt-2 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
                         </label>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div
-                  class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row sm: justify-center"
-                >
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row sm: justify-center">
                   <button
                     @click="uploadFile('course');"
                     x-bind:disabled="disabled"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
                     Upload Course
                   </button>
                   <button
                     @click="uploadFile('room');"
                     x-bind:disabled="disabled2"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
                     Upload Room
                   </button>
                   <button
                     @click="uploadFile('timelesson');"
                     x-bind:disabled="disabled3"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none">
                     Upload Timelesson
                   </button>
                 </div>
-                <div
-                  class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
-                >
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     @click="if(disabled && disabled2 && disabled3) {
                       isOpen = false;
@@ -381,14 +261,13 @@
                       $refs.fileInput1.value = null
                       $refs.fileInput2.value = null
                     } else {
-                      if(confirm('Bạn chưa nhập đủ file. Bạn có chắc muốn tiếp tục?')== true){
+                      if(confirm('Bạn chưa nhập đủ file, bạn muốn đóng chứ?')== true){
                         isOpen = false;
                       }else{
                         isOpen = true;
                       }
                     }"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Close
                   </button>
                 </div>
@@ -404,13 +283,11 @@
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="w-6 h-6"
-            >
+              class="w-6 h-6">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
-              />
+                d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
             </svg>
             Set algorithm parameters
           </div>
@@ -418,32 +295,20 @@
           <div
             x-data="{value_crossover:0, value_mutation:0, value_population_size:0}"
             x-show="isOpen2"
-            class="fixed z-10 inset-0 overflow-y-auto"
-          >
+            class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4">
-              <div
-                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-              ></div>
-              <div
-                class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-xl sm:w-full"
-              >
+              <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+              <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-xl sm:w-full">
                 <div class="px-6 py-4 border-b rounded-t">
-                  <h3 class="text-base font-semibold text-gray-900 lg:text-xl">
-                    Set Parameters
-                  </h3>
+                  <h3 class="text-base font-semibold text-gray-900 lg:text-xl">Set Parameters</h3>
                 </div>
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div class="mb-2">
-                    <label
-                      for="crossover"
-                      class="block text-sm font-medium leading-6 text-gray-900"
+                    <label for="crossover" class="block text-sm font-medium leading-6 text-gray-900"
                       >Rate crossover:</label
                     >
                     <div class="relative mt-2 rounded-md shadow-sm">
-                      <div
-                        class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-                      >
+                      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <span class="text-gray-500 sm:text-sm">%</span>
                       </div>
                       <input
@@ -455,21 +320,16 @@
                         class="block w-full rounded-md border-0 py-1.5 pl-10 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         placeholder="Vui lòng nhập tỉ lệ lai ghép"
                         min="0"
-                        max="100"
-                      />
+                        max="100" />
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label
-                      for="mutation"
-                      class="block text-sm font-medium leading-6 text-gray-900"
+                    <label for="mutation" class="block text-sm font-medium leading-6 text-gray-900"
                       >Rate mutation:</label
                     >
 
                     <div class="relative mt-2 rounded-md shadow-sm">
-                      <div
-                        class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-                      >
+                      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <span class="text-gray-500 sm:text-sm">%</span>
                       </div>
                       <input
@@ -481,21 +341,16 @@
                         class="block w-full rounded-md border-0 py-1.5 pl-10 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         placeholder="Vui lòng nhập tỉ lệ đột biến"
                         min="0"
-                        max="100"
-                      />
+                        max="100" />
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label
-                      for="population"
-                      class="block text-sm font-medium leading-6 text-gray-900"
+                    <label for="population" class="block text-sm font-medium leading-6 text-gray-900"
                       >Number of individuals:</label
                     >
 
                     <div class="relative mt-2 rounded-md shadow-sm">
-                      <div
-                        class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-                      >
+                      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <span class="text-gray-500 sm:text-sm">#</span>
                       </div>
                       <input
@@ -506,25 +361,20 @@
                         id="population"
                         class="block w-full rounded-md border-0 py-1.5 pl-10 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                         placeholder="Vui lòng nhập số lượng cá thể:"
-                        min="0"
-                      />
+                        min="0" />
                     </div>
                   </div>
                 </div>
-                <div
-                  class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
-                >
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     @click="isOpen2= false;alert('Update parameters successfully!')"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Done
                   </button>
 
                   <button
                     @click="isOpen2= false;"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Close
                   </button>
                 </div>
@@ -541,31 +391,21 @@
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="w-6 h-6"
-            >
+              class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"
-              />
+                d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
             </svg>
             Run algorithm
           </div>
           <!-- Modal -->
           <div x-show="isOpen3" class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4">
+              <div class="fixed inset-0 bg-gray-200 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
               <div
-                class="fixed inset-0 bg-gray-200 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-              ></div>
-              <div
-                class="bg-transparent flex flex-col items-center justify-center rounded-lg overflow-hidden transform transition-all sm:max-w-xl sm:w-full sm:h-[100vh]"
-              >
+                class="bg-transparent flex flex-col items-center justify-center rounded-lg overflow-hidden transform transition-all sm:max-w-xl sm:w-full sm:h-[100vh]">
                 <div class="follow-the-leader">
                   <div></div>
                   <div></div>
@@ -591,236 +431,141 @@
 
                 <button
                   @click="isOpen3 = false;"
-                  class="sr-only w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
+                  class="sr-only w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                   Close
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- RESULT ANALYSIS -->
         <div>
-          <div class="box" @click="isOpen4 = true; getResultAnalysis()">
+          <div class="box" @click="isOpen4 = true">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="w-6 h-6"
-            >
+              class="w-6 h-6">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-              />
+                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
             </svg>
             Result analysis
           </div>
           <!-- Modal -->
           <div x-show="isOpen4" class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4">
-              <div
-                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-              ></div>
-              <div
-                class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:min-w-lg sm:w-full"
-              >
+              <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+              <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:min-w-lg sm:w-full">
                 <div class="px-6 py-4 border-b rounded-t">
-                  <h3 class="text-base font-semibold text-gray-900 lg:text-xl">
-                    Result Analysis
-                  </h3>
+                  <h3 class="text-base font-semibold text-gray-900 lg:text-xl">Result Analysis</h3>
                 </div>
                 <div class="py-10 bg-white">
                   <div class="px-4 mx-auto max-w-[1000px] sm:px-6 lg:px-8">
-                    <template x-data="resultAnalysis">
-                      <div
-                        class="grid grid-cols-1 gap-6 px-6 sm:px-0 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-12"
-                      >
-                        <div
-                          class="overflow-hidden bg-white border border-gray-200 rounded-lg"
-                        >
-                          <div class="px-4 py-6">
-                            <div class="flex items-center">
-                              <svg
-                                class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-6 h-6"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
-                                />
-                              </svg>
+                    <div class="grid grid-cols-1 gap-6 px-6 sm:px-0 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-12">
+                      <div class="overflow-hidden bg-white border border-gray-200 rounded-lg">
+                        <div class="px-4 py-6">
+                          <div class="flex items-center">
+                            <svg
+                              class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="w-6 h-6">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                            </svg>
 
-                              <div class="ml-4">
-                                <h4
-                                  class="text-2xl font-bold text-gray-900"
-                                  x-text="resultAnalysis.populationSize"
-                                ></h4>
-                                <p
-                                  class="mt-1.5 text-md font-medium leading-tight text-gray-500"
-                                >
-                                  Population Size
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          class="overflow-hidden bg-white border border-gray-200 rounded-lg"
-                        >
-                          <div class="px-4 py-6">
-                            <div class="flex items-center">
-                              <svg
-                                class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-6 h-6"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
-                                />
-                              </svg>
-
-                              <div class="ml-4">
-                                <h4
-                                  class="text-2xl font-bold text-gray-900"
-                                  x-text="resultAnalysis.crossoverRate"
-                                >
-                                </h4>
-                                <p
-                                  class="mt-1.5 text-md font-medium leading-tight text-gray-500"
-                                >
-                                  Rate Crossover
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          class="overflow-hidden bg-white border border-gray-200 rounded-lg"
-                        >
-                          <div class="px-4 py-6">
-                            <div class="flex items-center">
-                              <svg
-                                class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-6 h-6"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25"
-                                />
-                              </svg>
-                              <div class="ml-4">
-                                <h4
-                                  class="text-2xl font-bold text-gray-900"
-                                  x-text="resultAnalysis.mutationRate"
-                                ></h4>
-                                <p
-                                  class="mt-1.5 text-md font-medium leading-tight text-gray-500"
-                                >
-                                  Rate Mutation
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          class="overflow-hidden bg-white border border-gray-200 rounded-lg"
-                        >
-                          <div class="px-4 py-6">
-                            <div class="flex items-center">
-                              <svg
-                                class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="1"
-                                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
-                              </svg>
-                              <div class="ml-4">
-                                <h4
-                                  class="text-2xl font-bold text-gray-900"
-                                  x-text="resultAnalysis.fitness"
-                                ></h4>
-                                <p
-                                  class="mt-1.5 text-md font-medium leading-tight text-gray-500"
-                                >
-                                  Fitness
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          class="overflow-hidden bg-white border border-gray-200 rounded-lg"
-                        >
-                          <div class="px-4 py-6">
-                            <div class="flex items-center">
-                              <svg
-                                class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="1"
-                                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
-                              </svg>
-                              <div class="ml-4">
-                                <h4
-                                  class="text-2xl font-bold text-gray-900"
-                                  x-text="resultAnalysis.runningTime"
-                                ></h4>
-                                <p
-                                  class="mt-1.5 text-md font-medium leading-tight text-gray-500"
-                                >
-                                  Running time
-                                </p>
-                              </div>
+                            <div class="ml-4">
+                              <h4 class="text-2xl font-bold text-gray-900">30</h4>
+                              <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Population Size</p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </template>
+
+                      <div class="overflow-hidden bg-white border border-gray-200 rounded-lg">
+                        <div class="px-4 py-6">
+                          <div class="flex items-center">
+                            <svg
+                              class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="w-6 h-6">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                            </svg>
+
+                            <div class="ml-4">
+                              <h4 class="text-2xl font-bold text-gray-900">80%</h4>
+                              <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Rate Crossover</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="overflow-hidden bg-white border border-gray-200 rounded-lg">
+                        <div class="px-4 py-6">
+                          <div class="flex items-center">
+                            <svg
+                              class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="w-6 h-6">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
+                            </svg>
+                            <div class="ml-4">
+                              <h4 class="text-2xl font-bold text-gray-900">10%</h4>
+                              <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Rate Mutation</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="overflow-hidden bg-white border border-gray-200 rounded-lg">
+                        <div class="px-4 py-6">
+                          <div class="flex items-center">
+                            <svg
+                              class="flex-shrink-0 w-8 h-8 text-fuchsia-600"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="1"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <div class="ml-4">
+                              <h4 class="text-2xl font-bold text-gray-900">130s</h4>
+                              <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Running time</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- <div class="bg-white px-4 pt-5 pb-4 sm:px-40 sm:pb-4">
+                <div class="bg-white px-4 pt-5 pb-4 sm:px-40 sm:pb-4">
                   <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                     <table class="w-full text-sm text-left text-gray-500">
                       <thead class="text-xs text-gray-700 uppercase bg-gray-200">
@@ -839,21 +584,17 @@
                       </tbody>
                     </table>
                   </div>
-                </div> -->
-                <div
-                  class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
-                >
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     @click="isOpen4= false"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Done
                   </button>
 
                   <button
                     @click="isOpen4= false;"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Close
                   </button>
                 </div>
@@ -869,13 +610,11 @@
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-6 h-6"
-          >
+            class="w-6 h-6">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-            />
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
           Export excel
         </div>
@@ -885,17 +624,15 @@
           <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-200">
               <tr>
-                <th scope="col" class="px-6 py-3">Mã lớp học phần</th>
+                <th scope="col" class="px-6 py-3">Mã học phần</th>
                 <th scope="col" class="px-6 py-3">Tên học phần</th>
-                <th scope="col" class="px-6 py-3">Tên lớp</th>
+                <th scope="col" class="px-6 py-3">Lớp</th>
                 <th scope="col" class="px-6 py-3">Giảng viên</th>
-                <th scope="col" class="px-6 py-3">Số lượng sinh viên</th>
-                <th scope="col" class="px-6 py-3">Phòng học</th>
-                <th scope="col" class="px-6 py-3">Sức chứa</th>
-                <th scope="col" class="px-6 py-3">Thời gian học</th>
-                <!-- <th scope="col" class="px-6 py-3">
+                <th scope="col" class="px-6 py-3">Phòng</th>
+                <th scope="col" class="px-6 py-3">Thời gian</th>
+                <th scope="col" class="px-6 py-3">
                   <span class="sr-only">Edit</span>
-                </th> -->
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -904,18 +641,15 @@
                   <th
                     scope="row"
                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
-                    x-text="item.maLopHocPhan"
-                  ></th>
+                    x-text="item.maLopHocPhan"></th>
                   <td class="px-6 py-4" x-text="item.tenMonHoc"></td>
                   <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
                   <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
-                  <td class="px-6 py-4" x-text="item.soLuongSinhVien"></td>
                   <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
-                  <td class="px-6 py-4" x-text="item.sucChua"></td>
                   <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>
-                  <!-- <td class="px-6 py-4 text-right">
+                  <td class="px-6 py-4 text-right">
                     <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
-                  </td> -->
+                  </td>
                 </tr>
               </template>
             </tbody>
