@@ -69,9 +69,9 @@ def run_genetic_algorithm():
     else:
         # xác định dân số ban đầu của quần thể
         if 'populationSize' in request_data:
-        population_size_input = request_data['populationSize']
+            population_size_input = request_data['populationSize']
         else:
-        return jsonify({'result': 'Thiếu trường populationSize'}), 400
+            return jsonify({'result': 'Thiếu trường populationSize'}), 400
 
         # Tỉ lệ đột biến
         if 'mutationRate' in request_data:
