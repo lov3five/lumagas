@@ -63,20 +63,27 @@ app.config['list_conflict_global'] = []
 
 @app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
-    request_data = request.get_json()
-    
-    # Kiểm tra dữ liệu đầu vào
+   # Kiểm tra dữ liệu đầu vào
     if len(request_data) == 0:
         return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
     else:
         # xác định dân số ban đầu của quần thể
+        if 'populationSize' in request_data:
         population_size_input = request_data['populationSize']
-    
+        else:
+        return jsonify({'result': 'Thiếu trường populationSize'}), 400
+
         # Tỉ lệ đột biến
-        mutation_rate_input = request_data['mutationRate']
-        
+        if 'mutationRate' in request_data:
+            mutation_rate_input = request_data['mutationRate']
+        else:
+            return jsonify({'result': 'Thiếu trường mutationRate'}), 400
+    
         # Tỉ lệ lai ghép
-        crossover_rate_input = request_data['crossoverRate']
+        if 'crossoverRate' in request_data:
+            crossover_rate_input = request_data['crossoverRate']
+        else:
+            return jsonify({'result': 'Thiếu trường crossoverRate'}), 400
     
     
     # Kiểm tra điều kiện dữ liệu đầu vào
