@@ -192,32 +192,47 @@ def get_list_classes_for_export_schedule_best():
     except Exception as e:
         print('Error: ' + str(e))
         
-def get_list_classes_by_schedule_id(schedule_id):
+        
+def get_list_classes_by_classroom_id(classroom_id):
     try:
-        sql = """SELECT c2.name, c2.subject_name, c2.classroom_id, 
-        c2.instructor_name , r.name, t.period, c2.max_number_of_students, r.capacity 
+        sql = sql = """SELECT c2.name, c2.classroom_id, c2.instructor_id , c2.instructor_name , c2.subject_id , c2.subject_name , c2.max_number_of_students , r.name , r.capacity, r.`type` , t.uuid , t.period 
                 FROM classes c
                 JOIN courses c2 on c.course_id = c2.id 
                 JOIN rooms r on c.room_id = r.id 
                 JOIN timelessons t on c.timelesson_id = t.id
-                WHERE schedule_id = %s"""
-        val = (schedule_id,)
-        mycursor.execute(sql, val)
-        myresult = mycursor.fetchall()
-        return myresult
-    except Exception as e:
-        print('Error: ' + str(e))
-        
-        
-def get_list_classes_by_classroom_id(classroom_id):
-    try:
-        sql = "SELECT * FROM classes WHERE classroom_id = %s"
+                WHERE c2.classroom_id = %s"""
         val = (classroom_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         return myresult
     except Exception as e:
         print('Error: ' + str(e))
+        
+def get_list_classes_by_instructor_id(instructor_id):
+    try:
+        sql = sql = """SELECT c2.name, c2.classroom_id, c2.instructor_id , c2.instructor_name , c2.subject_id , c2.subject_name , c2.max_number_of_students , r.name , r.capacity, r.`type` , t.uuid , t.period 
+                FROM classes c
+                JOIN courses c2 on c.course_id = c2.id 
+                JOIN rooms r on c.room_id = r.id 
+                JOIN timelessons t on c.timelesson_id = t.id
+                WHERE c2.instructor_id = %s"""
+        val = (instructor_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
+def get_room_id_from_list_classes():
+    try:
+        sql = "SELECT DISTINCT room_id FROM classes"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
+
 
 # SCHEDULES
 def create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict):
