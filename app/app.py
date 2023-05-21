@@ -61,8 +61,24 @@ global course_db, room_db, timelesson_db
 app.config['list_gene_global'] = []
 app.config['list_conflict_global'] = []
 
-@app.route('/api/ga/start', methods=['GET'])
+@app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
+    request_data = request.get_json()
+    
+    # Kiểm tra dữ liệu đầu vào
+    if len(request_data) == 0:
+        return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
+    else:
+        # xác định dân số ban đầu của quần thể
+        population_size_input = request_data['populationSize']
+    
+        # Tỉ lệ đột biến
+        mutation_rate_input = request_data['mutationRate']
+        
+        # Tỉ lệ lai ghép
+        crossover_rate_input = request_data['crossoverRate']
+    
+    
     # Kiểm tra điều kiện dữ liệu đầu vào
     courses_db = get_all_courses('courses')
     rooms_db = get_list_data('rooms')
@@ -90,15 +106,15 @@ def run_genetic_algorithm():
         #data = request.get_json()
         best_fitness = 0
         # xác định dân số ban đầu của quần thể
-        population_size = 15
+        population_size = population_size_input
     
         # xác định số thế hệ (lần lặp lại) thuật toán
         num_generations = 20000
         # Tỉ lệ đột biến
-        mutation_rate = 0.1 # 0.01 - 0.1
+        mutation_rate = mutation_rate_input  # 0.01 - 0.1
         # Tỉ lệ lai ghép
-        crossover_rate = 0.85  # 0.6 - 0.9
-        elitism_rate = 0.1 # 0.05 - 0.1
+        crossover_rate = crossover_rate_input  # 0.8 - 0.95
+        elitism_rate = 0.1 # 0.05 - 0.2
 
         # Tạo quần thể ban đầu
         # Bắt đầu tính thời gian chạy thuật toán
