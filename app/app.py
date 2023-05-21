@@ -1,7 +1,6 @@
 import os
 
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for)
 from werkzeug.utils import secure_filename
 app = Flask(__name__, static_url_path='/static')
 
@@ -36,24 +35,8 @@ def get_list_data_object_from_db(object):
     return jsonify({'result': data}), 200
 
 # API get list of schedule best fitness from database
-from db.service import get_list_classes_by_schedule_id_newest
+from db.service import get_list_classes_by_schedule_best
 
-
-@app.route('/api/schedule', methods=['GET'])
-def get_schedules():
-    schedule = []
-    for i in range(0, len(get_list_classes_by_schedule_id_newest())):
-        schedule.append({
-            'maHocPhan': get_list_classes_by_schedule_id_newest()[i][0],
-            'tenHocPhan': get_list_classes_by_schedule_id_newest()[i][1],
-            'tenLopHoc': get_list_classes_by_schedule_id_newest()[i][2],
-            'tenGiangVien': get_list_classes_by_schedule_id_newest()[i][3],
-            'tenPhongHoc': get_list_classes_by_schedule_id_newest()[i][4],
-            'thoiGianHoc': get_list_classes_by_schedule_id_newest()[i][5],
-            'soLuongSinhVien': get_list_classes_by_schedule_id_newest()[i][6],
-            'sucChua': get_list_classes_by_schedule_id_newest()[i][7],
-        })
-    return jsonify({'result': schedule}), 200
 
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
@@ -75,8 +58,36 @@ global info_ga
 info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
 global course_db, room_db, timelesson_db
 
-@app.route('/api/ga/start', methods=['GET'])
+app.config['list_gene_global'] = []
+app.config['list_conflict_global'] = []
+
+@app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
+    
+    request_data = request.get_json()
+   # Kiểm tra dữ liệu đầu vào
+    if len(request_data) == 0:
+        return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
+    else:
+        # xác định dân số ban đầu của quần thể
+        if 'populationSize' in request_data:
+            population_size_input = request_data['populationSize']
+        else:
+            return jsonify({'result': 'Thiếu trường populationSize'}), 400
+
+        # Tỉ lệ đột biến
+        if 'mutationRate' in request_data:
+            mutation_rate_input = request_data['mutationRate']
+        else:
+            return jsonify({'result': 'Thiếu trường mutationRate'}), 400
+    
+        # Tỉ lệ lai ghép
+        if 'crossoverRate' in request_data:
+            crossover_rate_input = request_data['crossoverRate']
+        else:
+            return jsonify({'result': 'Thiếu trường crossoverRate'}), 400
+    
+    
     # Kiểm tra điều kiện dữ liệu đầu vào
     courses_db = get_all_courses('courses')
     rooms_db = get_list_data('rooms')
@@ -104,18 +115,18 @@ def run_genetic_algorithm():
         #data = request.get_json()
         best_fitness = 0
         # xác định dân số ban đầu của quần thể
-        population_size = 50
+        population_size = population_size_input
     
         # xác định số thế hệ (lần lặp lại) thuật toán
         num_generations = 20000
         # Tỉ lệ đột biến
-        mutation_rate = 0.1 # 0.01 - 0.1
+        mutation_rate = mutation_rate_input  # 0.01 - 0.1
         # Tỉ lệ lai ghép
-        crossover_rate = 0.85  # 0.6 - 0.9
-        elitism_rate = 0.1 # 0.05 - 0.1
+        crossover_rate = crossover_rate_input  # 0.8 - 0.95
+        elitism_rate = 0.1 # 0.05 - 0.2
 
         # Tạo quần thể ban đầu
-         # Bắt đầu tính thời gian chạy thuật toán
+        # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
         
         population = Population(population_size, course_converted, room_converted, timelesson_converted).get_schedules()
@@ -124,8 +135,17 @@ def run_genetic_algorithm():
     
         ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result, running_time = ga.run(num_generations, start_time)
+        population_result, list_gene, list_conflict = ga.run(num_generations, start_time)
+        app.config['list_gene_global'] = list_gene
+        app.config['list_conflict_global'] = list_conflict
+        end_time = time.time()
+        running_time = end_time - start_time
         unchanged_conflict_count = ga.get_unchanged_count()
+        if ga.get_is_done() == True:
+            # Âm thanh thông báo hoàn thành trong 1s
+            sound_notification()
+            # Tắt sau 1s
+            time.sleep(1)
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
         for schedule in best_schedule:
@@ -143,42 +163,78 @@ def run_genetic_algorithm():
         print("Best schedule: ", best_schedule[0])
         
         print("Running time: ", running_time)
-        if ga.get_population()[0].get_conflict() == 0 or (unchanged_conflict_count > 150 and running_time > 300) :
-            #sound_notification()
-            population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
-            print('Best schedule fitness: ', population_result[0].get_fitness())
-            display_result(population_result)
-            # Lưu những kết quả tốt nhất vào database
-            # Lưu schedule vào database
-            # Lấy những thông tin cần lưu
-            fitness = population_result[0].get_fitness()
+        #sound_notification()
+        population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
+        print('Best schedule fitness: ', population_result[0].get_fitness())
+        display_result(population_result)
+        # Lưu những kết quả tốt nhất vào database
+        # Lưu schedule vào database
+        # Lấy những thông tin cần lưu
+        fitness = population_result[0].get_fitness()
+        conflict = population_result[0].get_conflict()
         
-            create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate)
-            schedule_id = get_schedule_id_newest()
-            # Lưu classes vào database
-            for i in range(0, len(population_result[0].get_classes())):
-                course_id = population_result[0].get_classes()[i].get_course().get_course_id()
-                room_id = population_result[0].get_classes()[i].get_room().get_room_id()
-                timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
-                create_classes(course_id, room_id, timelesson_id, schedule_id)
-            # Nếu các classes không lưu vào db, xóa schedule vừa lưu
-            if get_list_classes_by_schedule_id(schedule_id) == []:
-                delete_schedule_by_id(schedule_id)
-        return jsonify({'result': 'success', 'unchanged_conflict_count': unchanged_conflict_count}), 200
+        create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
+        schedule_id = get_schedule_id_newest()
+        # Lưu classes vào database
+        for i in range(0, len(population_result[0].get_classes())):
+            course_id = population_result[0].get_classes()[i].get_course().get_course_id()
+            room_id = population_result[0].get_classes()[i].get_room().get_room_id()
+            timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
+            create_classes(course_id, room_id, timelesson_id, schedule_id)
+            
+        # Nếu các classes không lưu vào db, xóa schedule vừa lưu
+        if get_list_classes_by_schedule_id(schedule_id) == []:
+            delete_schedule_by_id(schedule_id)
+    return jsonify({'result': 'success'}), 200
     
 # API get index input of GA: population size, mutation rate, crossover rate
-#@app.route('/api/ga/result-analysis', methods=['GET'])
-#def get_result_analysis():
+@app.route('/api/ga/result-analysis', methods=['GET'])
+def get_result_analysis():
+    result = get_list_schedules_create_nearly()
+    result_analysis = {
+        'scheduleId': result[0][0],
+        'fitness': result[0][1],
+        'runningTime': result[0][2],
+        'populationSize': result[0][3],
+        'mutationRate': result[0][4],
+        'crossoverRate': result[0][5],
+        'conflict': result[0][6],
+        'createdAt': result[0][7]
+    }
+    if result == []:
+        return jsonify({'result': 'fail', 'message': 'Không có dữ liệu'}), 400
+    
+    return jsonify({'result': 'success', 'data': result_analysis}), 200
 
 
-""" POST """
+# API get schedule by id
+@app.route('/api/schedule/<int:schedule_id>', methods=['GET'])
+def get_schedule_by_id_func(schedule_id):
+    schedule = []
+    for i in range(0, len( get_list_classes_by_schedule_id(schedule_id))):
+        schedule.append({
+            'maHocPhan':  get_list_classes_by_schedule_id(schedule_id)[i][0],
+            'tenHocPhan':  get_list_classes_by_schedule_id(schedule_id)[i][1],
+            'tenLopHoc':  get_list_classes_by_schedule_id(schedule_id)[i][2],
+            'tenGiangVien':  get_list_classes_by_schedule_id(schedule_id)[i][3],
+            'tenPhongHoc':  get_list_classes_by_schedule_id(schedule_id)[i][4],
+            'thoiGianHoc':  get_list_classes_by_schedule_id(schedule_id)[i][5],
+            'soLuongSinhVien':  get_list_classes_by_schedule_id(schedule_id)[i][6],
+            'sucChua':  get_list_classes_by_schedule_id(schedule_id)[i][7],
+        })
+    return jsonify({'result': schedule}), 200
+
 ### UPLOAD FILE EXCEL
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
 OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
+CHART_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_chart')
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), './templates')
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
 
 app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
+app.config['CHART_FOLDER'] = CHART_FOLDER
+app.config['TEMPLATE_FOLDER'] = TEMPLATE_FOLDER
 
 import pandas as pd
 
@@ -252,7 +308,181 @@ def upload_file(type_data):
     else: 
         return jsonify({'result': 'File is invalid, only accept .xlsx, .xls, .csv'}), 400
 
-            
+# API export file excel
+from excel.write_excel import export_to_excel
+#add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
+#add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
+from datetime import datetime as dt
+
+@app.route('/api/schedule', methods=['GET'])
+def get_best_schedule():
+    result = get_list_classes_for_export_schedule_best()
+    schedule = []
+    number_conflict = 0
+    for i in range(len(result)):
+        is_conflict = False
+        type_conflict = ''
+        # Kiểm tra sức chứa
+        if result[i][6] > result[i][8]:
+            number_conflict += 1
+            type_conflict = 'Xung đột sức chứa'
+            is_conflict = True
+
+        for j in range(i+1, len(result)):
+            # Tại cùng 1 thời gian học
+            if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
+                if result[i][7] == result[j][7]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột phòng học'
+                    is_conflict = True
+                # 1 giảng viên dạy 2 lớp
+                if result[i][2] == result[j][2]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột giảng viên'
+                    is_conflict = True
+                # 1 lớp học 2 môn
+                if result[i][4] == result[j][4]:
+                    number_conflict += 1
+                    type_conflict = 'Xung đột môn học'
+                    is_conflict = True
+                
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11],
+            'coXungDot': is_conflict,
+            'loaiXungDot': type_conflict
+        })
+    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict}), 200
+
+# API get schedule by tenLopHoc
+@app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
+def get_schedule_by_class_name(classroom_id):
+    result = get_list_classes_by_classroom_id(classroom_id)
+    schedule = []
+    for i in range(len(result)):
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11]
+        })
+    return jsonify({'result': schedule, 'filter': 'LỚP HỌC'}), 200
+
+#API get schedule by maGiangVien
+@app.route('/api/schedule/instructor/<string:instructor_id>', methods=['GET'])
+def get_schedule_by_instructor_id(instructor_id):
+    result = get_list_classes_by_instructor_id(instructor_id)
+    schedule = []
+    for i in range(len(result)):
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11]
+        })
+    return jsonify({'result': schedule, 'filter': 'GIẢNG VIÊN'}), 200
+
+
+
+
+
+@app.route('/api/ga/export/schedule', methods=['GET'])
+def export_file():
+    result = get_list_classes_for_export_schedule_best()
+    columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
+               'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
+               'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+
+    df = pd.DataFrame(result, columns=columns)
+
+    # Tạo tên file tự động dựa trên thời gian
+    current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"schedule_fitness_{current_time}.xlsx"
+
+    # Tạo đường dẫn tạm thời cho file xuất
+    file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
+
+    # Xuất DataFrame thành file Excel
+    df.to_excel(file_path, index=False)
+
+    # Kiểm tra xem file có tồn tại hay không
+    if os.path.isfile(file_path):
+        # Trả về file trực tiếp cho người dùng để tải xuống
+        return send_from_directory(app.config['DOWNLOAD_FOLDER'],file_name, as_attachment=True)
+    else:
+        return jsonify({'result': 'File not found'}), 404
+    
+    
+# Render chart
+import plotly.graph_objs as go
+
+@app.route('/result-analysis')
+def render_chart():
+    list_gene = app.config['list_gene_global']
+    list_conflict = app.config['list_conflict_global']
+    
+    if len(list_gene) == 0 or len(list_conflict) == 0:
+        return jsonify({'result': 'Không có dữ liệu. Có thể bạn chưa chạy thuật toán'}), 404
+    
+    df = pd.DataFrame({'Generation': list_gene, 'Conflict': list_conflict})
+    
+    # Tạo tên file tự động dựa trên thời gian
+    current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"conflict_generation_{current_time}.xlsx"
+
+    # Tạo đường dẫn tạm thời cho file xuất
+    file_path = os.path.join(app.config['CHART_FOLDER'], file_name)
+    
+    # Xuất DataFrame thành file Excel
+    df.to_excel(file_path, index=False)
+    
+    # Render chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list_gene, y=list_conflict,
+                        mode='lines+markers',
+                        name='lines+markers'))
+    fig.update_layout(title='Đồ thị thể hiện sự thay đổi của hàm mục tiêu qua các thế hệ',
+                        xaxis_title='Thế hệ',
+                        yaxis_title='Số lượng xung đột')
+    
+    # Tạo đường dẫn cho file chart.html
+    chart_file_path = os.path.join(app.config['TEMPLATE_FOLDER'], 'chart.html')
+    
+    # Xóa file chart.html nếu tồn tại
+    if os.path.exists(chart_file_path):
+        os.remove(chart_file_path)
+    
+    # Xuất biểu đồ dưới dạng file HTML
+    fig.write_html(chart_file_path)
+    
+    return render_template('chart.html')
+
 
 # API download file
 @app.route('/api/download/<filename>', methods=['GET'])
@@ -262,8 +492,3 @@ def download_file(filename):
         return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
-
-
-""" DELETE """
-""" PUT """
-""" PATCH """

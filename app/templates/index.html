@@ -18,6 +18,8 @@
     isOpen: false,isOpen2: false,isOpen3: false,isOpen4: false,isOpen5: false,
     schedules:'',
     disabled: false,disabled2: false,disabled3: false,
+    analysis:{},
+    value_crossover: 85, value_mutation: 50, value_population_size:10,
     uploadFile: function(route) {
       let fileTemp = this.fileCourse
       if(route == 'room'){fileTemp = this.fileRoom}
@@ -46,43 +48,153 @@
       .then(data => {
         if(route == 'room'){this.fileRoom = null}
         if(route == 'timelesson'){this.fileTimeLesson = null}
-        if(route == 'timelesson'){this.fileCourse = null}
+        if(route == 'course'){this.fileCourse = null}
         alert(data.result);
       })
     },
-    getSchedule: function(){
-      fetch('/api/schedule', {
-        method: 'GET',
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(response.statusText);
+    getSchedule: async function() {
+      try {
+        const response = await fetch('/api/schedule', {
+          method: 'GET',
+        });
+    
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+    
+        const data = await response.json();
+        this.schedules = data.result;
+        console.log(data.result);
+        alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.');
+      } catch (error) {
+        console.error(error);
+      }
+    },    
+      runGa: async function() {
+          try {
+            const response = await fetch('/api/ga/start', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                populationSize: this.value_population_size,
+                mutationRate: this.value_mutation / 100 ,
+                crossoverRate: this.value_crossover / 100,
+              })
+            });
+        
+            if (!response.ok) {
+              throw new Error(response.statusText);
             }
-            return response.json();
-          })
-        .then(data => {
-          this.schedules = data.result;
-          alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.')
-          })
-        },
-        runGa: function(){
-          fetch('/api/ga/start', {
-            method: 'GET',
-            })
-            .then(response => {
-              if (!response.ok) {
-                throw new Error(response.statusText);
-                }
-                return response.json();
-              })
-            .then(data => {
-              if(data.result == 'success'){
-                this.isOpen3 = false;
-                this.getSchedule();
-                }
-              })
-          },
+        
+            const data = await response.json();
+        
+            if (data.result === 'success') {
+              this.isOpen3 = false;
+              await this.getSchedule();
+            }
+        
+            const analysisResponse = await fetch('/api/ga/result-analysis', { method: 'GET' });
+        
+            if (!analysisResponse.ok) {
+              throw new Error(analysisResponse.statusText);
+            }
+        
+            const data1 = await analysisResponse.json();
+            this.analysis = data1.data;
+          } catch (error) {
+            console.error(error);
+          }
+        }
+        
   }">
+    <div>
+      <div
+        @click="isOpen5 = true"
+        class="absolute flex justify-center items-center cursor-pointer rounded-bl-[5rem] pt-4 top-0 right-0 translate-y-[-48px] bg-green-500 w-[150px] h-[150px] font-bold">
+        Lịch theo lớp
+      </div>
+      <!-- Modal -->
+      <div x-show="isOpen5" class="fixed z-10 inset-0 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+          <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:min-w-xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div class="px-6 py-4 border-b rounded-t">
+                <h3 class="text-base font-semibold text-gray-900 lg:text-xl text-center">Student calendar</h3>
+              </div>
+              <div class="overflow-x-scroll scroll-smooth">
+                <div class="timetable w-[1500px]">
+                  <div class="week-names">
+                    <div>monday</div>
+                    <div>tuesday</div>
+                    <div>wednesday</div>
+                    <div>thursday</div>
+                    <div>friday</div>
+                    <div class="weekend">saturday</div>
+                    <div class="weekend">sunday</div>
+                  </div>
+                  <div class="time-interval">
+                    <div>6:00 - 09:00</div>
+                    <div>09:10 - 11:40</div>
+                    <div>12:30 - 15:00</div>
+                    <div>15:10 - 17:40</div>
+                  </div>
+                  <div class="content">
+                    <div>
+                      <div class="accent-orange-gradient"></div>
+                    </div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                        <div>
+                      <div class="accent-green-gradient"></div>
+                    </div>
+                    <div class="weekend"></div>
+                    <div class="weekend"></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div>
+                      <div class="accent-cyan-gradient"></div>
+                    </div>
+                    <div></div>
+                    <div class="weekend"></div>
+                    <div class="weekend"></div>
+                    <div>
+                      <div class="accent-pink-gradient"></div>
+                    </div>
+                    <div></div>
+                    <div>
+                      <div class="accent-purple-gradient"></div>
+                    </div>
+                    <div></div>
+                    <div></div>
+                    <div class="weekend"></div>
+                    <div class="weekend"></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div class="weekend"></div>
+                    <div class="weekend"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                @click="isOpen5 = false"
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="main">
       <h1 class="mb-10 text-center text-3xl font-extrabold text-gray-900 md:text-5xl lg:text-6xl">
         <span class="text-transparent bg-clip-text bg-gradient-to-r to-green-600 from-green-400">LUMAGAS</span>
@@ -234,13 +346,13 @@
                   <button
                     @click="uploadFile('course');"
                     x-bind:disabled="disabled"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none">
                     Upload Course
                   </button>
                   <button
                     @click="uploadFile('room');"
                     x-bind:disabled="disabled2"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800  sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none" >
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-700 text-base font-medium text-white hover:bg-purple-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-75 disabled:pointer-events-none">
                     Upload Room
                   </button>
                   <button
@@ -293,7 +405,6 @@
           </div>
           <!-- Modal -->
           <div
-            x-data="{value_crossover:0, value_mutation:0, value_population_size:0}"
             x-show="isOpen2"
             class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4">
@@ -464,6 +575,9 @@
                 </div>
                 <div class="py-10 bg-white">
                   <div class="px-4 mx-auto max-w-[1000px] sm:px-6 lg:px-8">
+                    <div class="flex justify-center mb-8">
+                      <a href="/result-analysis" target="_blank" class="box">Biểu đồ phân tích</a>
+                    </div>
                     <div class="grid grid-cols-1 gap-6 px-6 sm:px-0 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-12">
                       <div class="overflow-hidden bg-white border border-gray-200 rounded-lg">
                         <div class="px-4 py-6">
@@ -481,9 +595,8 @@
                                 stroke-linejoin="round"
                                 d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                             </svg>
-
                             <div class="ml-4">
-                              <h4 class="text-2xl font-bold text-gray-900">30</h4>
+                              <h4 class="text-2xl font-bold text-gray-900" x-text="analysis.populationSize"></h4>
                               <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Population Size</p>
                             </div>
                           </div>
@@ -508,7 +621,7 @@
                             </svg>
 
                             <div class="ml-4">
-                              <h4 class="text-2xl font-bold text-gray-900">80%</h4>
+                              <h4 class="text-2xl font-bold text-gray-900" x-text="analysis.crossoverRate"></h4>
                               <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Rate Crossover</p>
                             </div>
                           </div>
@@ -532,7 +645,7 @@
                                 d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
                             </svg>
                             <div class="ml-4">
-                              <h4 class="text-2xl font-bold text-gray-900">10%</h4>
+                              <h4 class="text-2xl font-bold text-gray-900" x-text="analysis.mutationRate"></h4>
                               <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Rate Mutation</p>
                             </div>
                           </div>
@@ -555,7 +668,7 @@
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                             <div class="ml-4">
-                              <h4 class="text-2xl font-bold text-gray-900">130s</h4>
+                              <h4 class="text-2xl font-bold text-gray-900" x-text="`${analysis.runningTime} s`"></h4>
                               <p class="mt-1.5 text-md font-medium leading-tight text-gray-500">Running time</p>
                             </div>
                           </div>
@@ -577,9 +690,9 @@
                       </thead>
                       <tbody>
                         <tr class="bg-white border-b hover:bg-gray-50">
-                          <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">1</th>
-                          <td class="px-6 py-4">0.111</td>
-                          <td class="px-6 py-4">8</td>
+                          <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap" x-text="analysis.scheduleId"></th>
+                          <td class="px-6 py-4" x-text="analysis.fitness"></td>
+                          <td class="px-6 py-4" x-text="analysis.conflict"></td>
                         </tr>
                       </tbody>
                     </table>
@@ -603,7 +716,7 @@
           </div>
         </div>
 
-        <div class="box">
+        <a href="/api/ga/export/schedule" download class="box">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -617,7 +730,7 @@
               d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
           Export excel
-        </div>
+        </a>
       </div>
       <section>
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -625,8 +738,8 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-200">
               <tr>
                 <th scope="col" class="px-6 py-3">Mã học phần</th>
-                <th scope="col" class="px-6 py-3">Tên học phần</th>
-                <th scope="col" class="px-6 py-3">Lớp</th>
+                <th scope="col" class="px-6 py-3">Tên học phần (số lượng SV)</th>
+                <th scope="col" class="px-6 py-3">Lớp (sức chứa)</th>
                 <th scope="col" class="px-6 py-3">Giảng viên</th>
                 <th scope="col" class="px-6 py-3">Phòng</th>
                 <th scope="col" class="px-6 py-3">Thời gian</th>
@@ -636,14 +749,14 @@
               </tr>
             </thead>
             <tbody>
-              <template x-for="item in schedules" :key="item.maHocPhan">
+              <template x-for="(item, index) in schedules" :key="index">
                 <tr class="bg-white border-b hover:bg-gray-50">
                   <th
                     scope="row"
                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
-                    x-text="item.maHocPhan"></th>
-                  <td class="px-6 py-4" x-text="item.tenHocPhan"></td>
-                  <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
+                    x-text="item.maLopHocPhan"></th>
+                  <td class="px-6 py-4" x-text="item.tenMonHoc?`${item.tenMonHoc} - ${item.soLuongSinhVien}`:''"></td>
+                  <td class="px-6 py-4" x-text="item.tenLopHoc?`${item.tenLopHoc} - ${item.sucChua}`:''"></td>
                   <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
                   <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
                   <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>

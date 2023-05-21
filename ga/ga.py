@@ -3,6 +3,8 @@ from ga.population import Population
 import os
 import pandas as pd
 import time
+import config
+
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -60,10 +62,13 @@ class GA:
         self.rooms = rooms
         self.timelessons = timelessons
         self.course_per_resourse = "{} / {}".format(len(self.courses), len(self.rooms) * len(self.timelessons))
+        self.is_done = False
         
     def get_course_per_resource(self):
         return self.course_per_resourse
     
+    def get_is_done(self):
+        return self.is_done
         
     def get_population(self):
         return self.population
@@ -92,6 +97,8 @@ class GA:
         if current_conflict == self.prev_conflict:
             self.unchanged_count += 1  
             print('Số thế hệ không thay đổi conflict: ', self.unchanged_count) 
+        else:
+            self.unchanged_count = 0
             
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict
@@ -125,7 +132,7 @@ class GA:
     
     def select_parents(self):
         # Tournament selection
-        tournament_size = 6
+        tournament_size = config.TOURNAMENT_SIZE
         tournament = random.choices(self.population, k=tournament_size)
         tournament.sort(key=lambda x: x.get_fitness(), reverse=True)
         parent1 = tournament[0]
@@ -198,20 +205,25 @@ class GA:
         return best_individual
     
     def run(self, num_generations, start_time):
-        elapsed_time = time.time() - start_time
+        # Đếm thời gian chạy
+        elapsed_time = 0
         for i in range(num_generations):
             print('Số thế hệ:', i)
+            # Tính thời gian đã trôi qua
+            current_time = time.time()
+            elapsed_time = current_time - start_time
             print("Course_per_resourse", self.get_course_per_resource())
             self.list_generation.append(i)
             self.evolve()
-            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= 150 and elapsed_time >= 300):
+            if self.population[0].get_conflict() == 0 or (self.unchanged_count >= config.UNCHANGED_CONFLICT_COUNT and elapsed_time >= config.TIME_STOP_GA):
+                self.is_done = True
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
+                
                 #add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
-                #add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
                 break
             
                 
-        return self.population, elapsed_time
+        return self.population, list_gene, list_conflict
     
     
