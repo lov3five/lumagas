@@ -63,6 +63,8 @@ app.config['list_conflict_global'] = []
 
 @app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
+    
+    request_data = request.get_json()
    # Kiểm tra dữ liệu đầu vào
     if len(request_data) == 0:
         return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
