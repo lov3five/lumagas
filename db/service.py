@@ -254,14 +254,15 @@ def delete_schedule_by_id(schedule_id):
 
 def get_list_schedules_create_nearly():
     try:
-        # Get danh sách các schedule đã tạo gần đây nhất (lấy hết schedule) với running_time giống nhau
-        sql = """SELECT * FROM schedules WHERE running_time = (SELECT running_time FROM schedules ORDER BY created_at DESC LIMIT 1) 
-        ORDER BY created_at DESC"""
-        mycursor.execute(sql)
+        schedule_id = get_schedule_id_newest()
+        sql = "SELECT * FROM schedules WHERE id = %s"
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         return myresult
     except Exception as e:
         print('Error: ' + str(e))
+
 # ROOMS 
 def get_list_rooms():
     try:
