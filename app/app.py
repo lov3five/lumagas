@@ -63,20 +63,29 @@ app.config['list_conflict_global'] = []
 
 @app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
-    request_data = request.get_json()
     
-    # Kiểm tra dữ liệu đầu vào
+    request_data = request.get_json()
+   # Kiểm tra dữ liệu đầu vào
     if len(request_data) == 0:
         return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
     else:
         # xác định dân số ban đầu của quần thể
-        population_size_input = request_data['populationSize']
-    
+        if 'populationSize' in request_data:
+            population_size_input = request_data['populationSize']
+        else:
+            return jsonify({'result': 'Thiếu trường populationSize'}), 400
+
         # Tỉ lệ đột biến
-        mutation_rate_input = request_data['mutationRate']
-        
+        if 'mutationRate' in request_data:
+            mutation_rate_input = request_data['mutationRate']
+        else:
+            return jsonify({'result': 'Thiếu trường mutationRate'}), 400
+    
         # Tỉ lệ lai ghép
-        crossover_rate_input = request_data['crossoverRate']
+        if 'crossoverRate' in request_data:
+            crossover_rate_input = request_data['crossoverRate']
+        else:
+            return jsonify({'result': 'Thiếu trường crossoverRate'}), 400
     
     
     # Kiểm tra điều kiện dữ liệu đầu vào
@@ -217,11 +226,13 @@ def get_schedule_by_id_func(schedule_id):
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
 OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
 CHART_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_chart')
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), './templates')
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
 
 app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 app.config['CHART_FOLDER'] = CHART_FOLDER
+app.config['TEMPLATE_FOLDER'] = TEMPLATE_FOLDER
 
 import pandas as pd
 
@@ -383,7 +394,7 @@ def render_chart():
                         yaxis_title='Số lượng xung đột')
     
     # Tạo đường dẫn cho file chart.html
-    chart_file_path = os.path.join(app.config['CHART_FOLDER'], 'chart.html')
+    chart_file_path = os.path.join(app.config['TEMPLATE_FOLDER'], 'chart.html')
     
     # Xóa file chart.html nếu tồn tại
     if os.path.exists(chart_file_path):
