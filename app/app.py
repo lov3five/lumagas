@@ -203,8 +203,8 @@ def get_result_analysis():
         'conflict': get_list_schedules_create_nearly()[0][6],
         'createdAt': get_list_schedules_create_nearly()[0][7]
     }
-
-    return jsonify({'result': 'success' , 'data': result_analysis}), 200
+    
+    return jsonify({'result': 'success', 'data': result_analysis}), 200
 
 
 # API get schedule by id

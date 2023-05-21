@@ -1,7 +1,7 @@
 DB_HOST='localhost'
 DB_NAME='ga_demo'
 DB_USER='root'
-DB_PASSWORD='mysql'
+DB_PASSWORD='admin'
 
 
 TIME_STOP_GA = 300 # seconds
