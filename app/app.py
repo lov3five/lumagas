@@ -226,11 +226,13 @@ def get_schedule_by_id_func(schedule_id):
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
 OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
 CHART_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_chart')
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), './templates')
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
 
 app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
 app.config['CHART_FOLDER'] = CHART_FOLDER
+app.config['TEMPLATE_FOLDER'] = TEMPLATE_FOLDER
 
 import pandas as pd
 
@@ -392,7 +394,7 @@ def render_chart():
                         yaxis_title='Số lượng xung đột')
     
     # Tạo đường dẫn cho file chart.html
-    chart_file_path = os.path.join(app.config['CHART_FOLDER'], 'chart.html')
+    chart_file_path = os.path.join(app.config['TEMPLATE_FOLDER'], 'chart.html')
     
     # Xóa file chart.html nếu tồn tại
     if os.path.exists(chart_file_path):
