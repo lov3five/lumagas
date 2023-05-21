@@ -201,7 +201,9 @@ def get_result_analysis():
         'conflict': result[0][6],
         'createdAt': result[0][7]
     }
-
+    if result == []:
+        return jsonify({'result': 'fail', 'message': 'Không có dữ liệu'}), 400
+    
     return jsonify({'result': 'success', 'data': result_analysis}), 200
 
 
