@@ -38,22 +38,6 @@ def get_list_data_object_from_db(object):
 from db.service import get_list_classes_by_schedule_best
 
 
-@app.route('/api/schedule', methods=['GET'])
-def get_schedules():
-    schedule = []
-    for i in range(0, len(get_list_classes_by_schedule_best())):
-        schedule.append({
-            'maHocPhan': get_list_classes_by_schedule_best()[i][0],
-            'tenHocPhan': get_list_classes_by_schedule_best()[i][1],
-            'tenLopHoc': get_list_classes_by_schedule_best()[i][2],
-            'tenGiangVien': get_list_classes_by_schedule_best()[i][3],
-            'tenPhongHoc': get_list_classes_by_schedule_best()[i][4],
-            'thoiGianHoc': get_list_classes_by_schedule_best()[i][5],
-            'soLuongSinhVien': get_list_classes_by_schedule_best()[i][6],
-            'sucChua': get_list_classes_by_schedule_best()[i][7],
-        })
-    return jsonify({'result': schedule}), 200
-
 # API start GA algorithm
 #@app.route('/api/start-ga', methods['POST'])
 # GA Module support
@@ -74,8 +58,36 @@ global info_ga
 info_ga = courses_per_resource(get_all_courses('courses'), get_list_data('rooms'), get_list_data('timelessons'))
 global course_db, room_db, timelesson_db
 
-@app.route('/api/ga/start', methods=['GET'])
+app.config['list_gene_global'] = []
+app.config['list_conflict_global'] = []
+
+@app.route('/api/ga/start', methods=['POST'])
 def run_genetic_algorithm():
+    
+    request_data = request.get_json()
+   # Kiểm tra dữ liệu đầu vào
+    if len(request_data) == 0:
+        return jsonify({'result': 'Dữ liệu đầu vào không hợp lệ'}), 400
+    else:
+        # xác định dân số ban đầu của quần thể
+        if 'populationSize' in request_data:
+            population_size_input = request_data['populationSize']
+        else:
+            return jsonify({'result': 'Thiếu trường populationSize'}), 400
+
+        # Tỉ lệ đột biến
+        if 'mutationRate' in request_data:
+            mutation_rate_input = request_data['mutationRate']
+        else:
+            return jsonify({'result': 'Thiếu trường mutationRate'}), 400
+    
+        # Tỉ lệ lai ghép
+        if 'crossoverRate' in request_data:
+            crossover_rate_input = request_data['crossoverRate']
+        else:
+            return jsonify({'result': 'Thiếu trường crossoverRate'}), 400
+    
+    
     # Kiểm tra điều kiện dữ liệu đầu vào
     courses_db = get_all_courses('courses')
     rooms_db = get_list_data('rooms')
@@ -103,18 +115,18 @@ def run_genetic_algorithm():
         #data = request.get_json()
         best_fitness = 0
         # xác định dân số ban đầu của quần thể
-        population_size = 15
+        population_size = population_size_input
     
         # xác định số thế hệ (lần lặp lại) thuật toán
         num_generations = 20000
         # Tỉ lệ đột biến
-        mutation_rate = 0.1 # 0.01 - 0.1
+        mutation_rate = mutation_rate_input  # 0.01 - 0.1
         # Tỉ lệ lai ghép
-        crossover_rate = 0.85  # 0.6 - 0.9
-        elitism_rate = 0.1 # 0.05 - 0.1
+        crossover_rate = crossover_rate_input  # 0.8 - 0.95
+        elitism_rate = 0.1 # 0.05 - 0.2
 
         # Tạo quần thể ban đầu
-         # Bắt đầu tính thời gian chạy thuật toán
+        # Bắt đầu tính thời gian chạy thuật toán
         start_time = time.time()
         
         population = Population(population_size, course_converted, room_converted, timelesson_converted).get_schedules()
@@ -123,7 +135,9 @@ def run_genetic_algorithm():
     
         ga = GA(population, mutation_rate, crossover_rate, elitism_rate, course_converted, room_converted, timelesson_converted)
     
-        population_result = ga.run(num_generations, start_time)
+        population_result, list_gene, list_conflict = ga.run(num_generations, start_time)
+        app.config['list_gene_global'] = list_gene
+        app.config['list_conflict_global'] = list_conflict
         end_time = time.time()
         running_time = end_time - start_time
         unchanged_conflict_count = ga.get_unchanged_count()
@@ -156,23 +170,19 @@ def run_genetic_algorithm():
         # Lưu những kết quả tốt nhất vào database
         # Lưu schedule vào database
         # Lấy những thông tin cần lưu
+        fitness = population_result[0].get_fitness()
+        conflict = population_result[0].get_conflict()
         
-        min_conflict = population_result[0].get_conflict()
-
-        # Lưu các lịch có fitness bằng best_fitness
-        for i in range(0, len(population_result)):
-            if population_result[i].get_conflict() == min_conflict:
-                # Lưu schedule vào database
-                conflict = population_result[i].get_conflict()
-                fitness = population_result[i].get_fitness()
-                create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
-                schedule_id = get_schedule_id_newest()
-                for j in range(0, len(population_result[i].get_classes())):
-                    course_id = population_result[i].get_classes()[j].get_course().get_course_id()
-                    room_id = population_result[i].get_classes()[j].get_room().get_room_id()
-                    timelesson_id = population_result[i].get_classes()[j].get_timelesson().get_timelesson_id()
-                    create_classes(course_id, room_id, timelesson_id, schedule_id)
-
+        create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
+        schedule_id = get_schedule_id_newest()
+        # Lưu classes vào database
+        for i in range(0, len(population_result[0].get_classes())):
+            course_id = population_result[0].get_classes()[i].get_course().get_course_id()
+            room_id = population_result[0].get_classes()[i].get_room().get_room_id()
+            timelesson_id = population_result[0].get_classes()[i].get_timelesson().get_timelesson_id()
+            create_classes(course_id, room_id, timelesson_id, schedule_id)
+            
+        # Nếu các classes không lưu vào db, xóa schedule vừa lưu
         if get_list_classes_by_schedule_id(schedule_id) == []:
             delete_schedule_by_id(schedule_id)
     return jsonify({'result': 'success'}), 200
@@ -181,15 +191,18 @@ def run_genetic_algorithm():
 @app.route('/api/ga/result-analysis', methods=['GET'])
 def get_result_analysis():
     result = get_list_schedules_create_nearly()
-    list_schedule = []
-    for i in range(0, len(result)):
-        list_schedule.append({ 
-                'schedule_id': result[i][0], 
-                'fitness': result[i][1],
-                'confict': result[i][6],
-                'created_at': result[i][7]
-        })
-    return jsonify({'result': 'success', 'populationSize': result[1][3], 'mutationRate': result[1][4],'crossOver': result[1][5], 'runningTime': result[1][2] , 'data': list_schedule}), 200
+    result_analysis = {
+        'scheduleId': result[0][0],
+        'fitness': result[0][1],
+        'runningTime': result[0][2],
+        'populationSize': result[0][3],
+        'mutationRate': result[0][4],
+        'crossoverRate': result[0][5],
+        'conflict': result[0][6],
+        'createdAt': result[0][7]
+    }
+
+    return jsonify({'result': 'success', 'data': result_analysis}), 200
 
 
 # API get schedule by id
@@ -212,10 +225,14 @@ def get_schedule_by_id_func(schedule_id):
 ### UPLOAD FILE EXCEL
 INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_input')
 OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_output')
+CHART_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../excel/data_chart')
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), './templates')
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
 
 app.config['UPLOAD_FOLDER'] = INPUT_FOLDER
 app.config['DOWNLOAD_FOLDER'] = OUTPUT_FOLDER
+app.config['CHART_FOLDER'] = CHART_FOLDER
+app.config['TEMPLATE_FOLDER'] = TEMPLATE_FOLDER
 
 import pandas as pd
 
@@ -295,33 +312,29 @@ from excel.write_excel import export_to_excel
 #add_dataframe_to_excel('output.xlsx', ['Generation'], list_gene, 'Generation3')
 from datetime import datetime as dt
 
-# @app.route('/api/export/schedule', methods=['GET'])
-# def export_file():
-#     result = get_list_classes_for_export_schedule_best()
-#     columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
-#                'Mã_môn_học', 'Tên_môn_học', 'Số_lượng_sinh_viên', 'Tên_phòng_học',
-#                'Sức_chứa', 'Loại_phòng', 'Mã_UUID', 'Thời_gian_học']
+@app.route('/api/schedule', methods=['GET'])
+def get_best_schedule():
+    result = get_list_classes_for_export_schedule_best()
+    schedule = []
+    for i in range(len(result)):
+        schedule.append({
+            'maLopHocPhan': result[i][0],
+            'tenLopHoc': result[i][1],
+            'maGiangVien': result[i][2],
+            'tenGiangVien': result[i][3],
+            'maMonHoc': result[i][4],
+            'tenMonHoc': result[i][5],
+            'soLuongSinhVien': result[i][6],
+            'tenPhongHoc': result[i][7],
+            'sucChua': result[i][8],
+            'loaiPhong': result[i][9],
+            'maUUID': result[i][10],
+            'thoiGianHoc': result[i][11]
+        })
+    return jsonify({'result': schedule}), 200
 
-#     df = pd.DataFrame(result, columns=columns)
 
-#     # Tạo tên file tự động dựa trên thời gian
-#     current_time = dt.now().strftime("%Y%m%d_%H%M%S")
-#     file_name = f"schedule_fitness_{current_time}.xlsx"
-
-#     # Tạo đường dẫn cho file xuất
-#     file_path = os.path.join(app.config['DOWNLOAD_FOLDER'], file_name)
-
-#     # Xuất DataFrame thành file Excel
-#     df.to_excel(file_path, index=False)
-
-#     # Kiểm tra xem file có tồn tại hay không
-#     if os.path.isfile(file_path):
-#         # Trả về đường dẫn của file để người dùng tải xuống
-#         return jsonify({'file_url': file_path})
-#     else:
-#         return jsonify({'result': 'File not found'}), 404
-
-@app.route('/api/export/schedule/', methods=['GET'])
+@app.route('/api/ga/export/schedule', methods=['GET'])
 def export_file():
     result = get_list_classes_for_export_schedule_best()
     columns = ['Mã_lớp_học_phần', 'Mã_lớp_học', 'Mã_giảng_viên', 'Tên_giảng_viên',
@@ -346,6 +359,52 @@ def export_file():
         return send_from_directory(app.config['DOWNLOAD_FOLDER'],file_name, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
+    
+    
+# Render chart
+import plotly.graph_objs as go
+
+@app.route('/result-analysis')
+def render_chart():
+    list_gene = app.config['list_gene_global']
+    list_conflict = app.config['list_conflict_global']
+    
+    if len(list_gene) == 0 or len(list_conflict) == 0:
+        return jsonify({'result': 'Không có dữ liệu. Có thể bạn chưa chạy thuật toán'}), 404
+    
+    df = pd.DataFrame({'Generation': list_gene, 'Conflict': list_conflict})
+    
+    # Tạo tên file tự động dựa trên thời gian
+    current_time = dt.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"conflict_generation_{current_time}.xlsx"
+
+    # Tạo đường dẫn tạm thời cho file xuất
+    file_path = os.path.join(app.config['CHART_FOLDER'], file_name)
+    
+    # Xuất DataFrame thành file Excel
+    df.to_excel(file_path, index=False)
+    
+    # Render chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list_gene, y=list_conflict,
+                        mode='lines+markers',
+                        name='lines+markers'))
+    fig.update_layout(title='Đồ thị thể hiện sự thay đổi của hàm mục tiêu qua các thế hệ',
+                        xaxis_title='Thế hệ',
+                        yaxis_title='Số lượng xung đột')
+    
+    # Tạo đường dẫn cho file chart.html
+    chart_file_path = os.path.join(app.config['TEMPLATE_FOLDER'], 'chart.html')
+    
+    # Xóa file chart.html nếu tồn tại
+    if os.path.exists(chart_file_path):
+        os.remove(chart_file_path)
+    
+    # Xuất biểu đồ dưới dạng file HTML
+    fig.write_html(chart_file_path)
+    
+    return render_template('chart.html')
+
 
 # API download file
 @app.route('/api/download/<filename>', methods=['GET'])
@@ -355,8 +414,3 @@ def download_file(filename):
         return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
-
-
-""" DELETE """
-""" PUT """
-""" PATCH """
