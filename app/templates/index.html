@@ -46,7 +46,7 @@
       .then(data => {
         if(route == 'room'){this.fileRoom = null}
         if(route == 'timelesson'){this.fileTimeLesson = null}
-        if(route == 'timelesson'){this.fileCourse = null}
+        if(route == 'course'){this.fileCourse = null}
         alert(data.result);
       })
     },
@@ -62,6 +62,7 @@
           })
         .then(data => {
           this.schedules = data.result;
+          console.log(data.result);
           alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.')
           })
         },
@@ -642,8 +643,8 @@
                     scope="row"
                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                     x-text="item.maHocPhan"></th>
-                  <td class="px-6 py-4" x-text="item.tenHocPhan"></td>
-                  <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
+                  <td class="px-6 py-4" x-text="item.tenHocPhan?`${item.tenHocPhan} - ${item.soLuongSinhVien}`:''"></td>
+                  <td class="px-6 py-4" x-text="item.tenLopHoc?`${item.tenLopHoc} - ${item.sucChua}`:''"></td>
                   <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
                   <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
                   <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>
