@@ -756,6 +756,7 @@
                 <th scope="col" class="px-6 py-3">Phòng</th>
                 <th scope="col" class="px-6 py-3">Sức chứa</th>
                 <th scope="col" class="px-6 py-3">Thời gian</th>
+                <th scope="col" class="px-6 py-3">Trạng thái</th>
                 <!-- <th scope="col" class="px-6 py-3">
                   <span class="sr-only">Edit</span>
                 </th> -->
@@ -775,6 +776,10 @@
                   <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
                   <td class="px-6 py-4" x-text="item.sucChua"></td>
                   <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>
+                  <td class="px-6 py-4 text-center">
+                    <span x-show="item.coXungDot === true" class="text-red-500 font-bold text-lg">&#10005;</span>
+                    <span x-show="item.coXungDot === false" class="text-green-500 font-bold text-lg">&#10003;</span>
+                  </td>
                   <!--<td class="px-6 py-4 text-right">
                     <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
                   </td> -->
