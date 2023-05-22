@@ -33,8 +33,8 @@ def login_required(route_func):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('logged_in'):
-            return redirect(url_for('login'))
+        if session.get('logged_in') is None:
+            return redirect('/login')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -73,18 +73,19 @@ def login():
             if user['username'] == username and user['password'] == password:
                 # Đăng nhập thành công
                 session['logged_in'] = True
-                print(session)
-                return redirect('/')
+                return jsonify({'result': 'success', 'message': 'Đăng nhập thành công'}), 200
         
-        return jsonify({'result': "Tài khoản hoặc mật khẩu sai!!!"})
+        return jsonify({'result': "failed", 'message': 'Thông tin đăng nhập không hợp lệ'}), 400
 
 @app.route('/logout', methods=['POST'])
 def logout():
     if 'logged_in' in session:
-        session['logged_in'] = False
-        return redirect(url_for('login'))
+        # Xóa trạng thái đăng nhập từ session
+        session.pop('logged_in', None)
+        return jsonify({'result': 'success','message': 'Đăng xuất thành công'}), 200
+
     else:
-        return jsonify({'result': 'Người dùng chưa đăng nhập'})
+        return jsonify({'result': 'failed','message': 'Người dùng chưa đăng nhập'}), 200
 
 # GET homepage LUMAGAS
 @app.route('/')

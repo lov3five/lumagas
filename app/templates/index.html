@@ -783,10 +783,12 @@
     </div>
 
   <script>
-    function logout(){
-      axios.post('/logout')
+    async function logout(){
+      await axios.post('/logout')
       .then(function (response) {
-        console.log(response.data);
+        if (response.data.result == 'success') {
+          window.location.href = '/login';
+        }
       })
       .catch(function (error) {
         console.error(error);
