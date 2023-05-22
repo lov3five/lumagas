@@ -749,14 +749,16 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-200">
               <tr>
                 <th scope="col" class="px-6 py-3">Mã học phần</th>
-                <th scope="col" class="px-6 py-3">Tên học phần (số lượng SV)</th>
-                <th scope="col" class="px-6 py-3">Lớp (sức chứa)</th>
+                <th scope="col" class="px-6 py-3">Tên học phần</th>
+                <th scope="col" class="px-6 py-3">Lớp</th>
+                <th scope="col" class="px-6 py-3">Số lượng sinh viên</th>
                 <th scope="col" class="px-6 py-3">Giảng viên</th>
                 <th scope="col" class="px-6 py-3">Phòng</th>
+                <th scope="col" class="px-6 py-3">Sức chứa</th>
                 <th scope="col" class="px-6 py-3">Thời gian</th>
-                <th scope="col" class="px-6 py-3">
+                <!-- <th scope="col" class="px-6 py-3">
                   <span class="sr-only">Edit</span>
-                </th>
+                </th> -->
               </tr>
             </thead>
             <tbody>
@@ -766,14 +768,16 @@
                     scope="row"
                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                     x-text="item.maLopHocPhan"></th>
-                  <td class="px-6 py-4" x-text="item.tenMonHoc?`${item.tenMonHoc} - ${item.soLuongSinhVien}`:''"></td>
-                  <td class="px-6 py-4" x-text="item.tenLopHoc?`${item.tenLopHoc} - ${item.sucChua}`:''"></td>
+                  <td class="px-6 py-4" x-text="item.tenMonHoc"></td>
+                  <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
+                  <td class="px-6 py-4" x-text="item.soLuongSinhVien"></td>
                   <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
                   <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
+                  <td class="px-6 py-4" x-text="item.sucChua"></td>
                   <td class="px-6 py-4" x-text="item.thoiGianHoc"></td>
-                  <td class="px-6 py-4 text-right">
+                  <!--<td class="px-6 py-4 text-right">
                     <a href="#" class="font-medium text-blue-600 hover:underline">Edit</a>
-                  </td>
+                  </td> -->
                 </tr>
               </template>
             </tbody>
