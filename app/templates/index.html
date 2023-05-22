@@ -9,6 +9,7 @@
     <link rel="icon" href="/static/favicon.ico" />
     <script src="/static/js/tailwindcss.js"></script>
     <script defer src="/static/js/alpinejs@.min.js"></script>
+    <script src="/static/js/axios.min.js"></script>
   </head>
   <body
     x-data="{
@@ -19,7 +20,7 @@
     schedules:'',
     disabled: false,disabled2: false,disabled3: false,
     analysis:{},
-    value_crossover: 85, value_mutation: 50, value_population_size:10,
+    value_crossover: 85, value_mutation: 20, value_population_size:20,
     uploadFile: function(route) {
       let fileTemp = this.fileCourse
       if(route == 'room'){fileTemp = this.fileRoom}
@@ -110,6 +111,15 @@
         
   }">
     <div>
+      <div class="card">
+        <div class="card-content">
+          <img src="/app/static/user-solid.svg" alt="Admin" class="card-image">
+          <h3 class="card-name">Admin</h3>
+        </div>
+        <div id="logoutButton" class="card-action">
+          <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</button>
+        </div>
+      </div>
       <div
         @click="isOpen5 = true"
         class="absolute flex justify-center items-center cursor-pointer rounded-bl-[5rem] pt-4 top-0 right-0 translate-y-[-48px] bg-green-500 w-[150px] h-[150px] font-bold">
@@ -120,6 +130,13 @@
         <div class="flex items-center justify-center min-h-screen px-4">
           <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
           <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:min-w-xl sm:w-full">
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                @click="isOpen5 = false"
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                Close
+              </button>
+            </div>
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="px-6 py-4 border-b rounded-t">
                 <h3 class="text-base font-semibold text-gray-900 lg:text-xl text-center">Student calendar</h3>
@@ -184,13 +201,7 @@
                 </div>
               </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                @click="isOpen5 = false"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                Close
-              </button>
-            </div>
+            
           </div>
         </div>
       </div>
@@ -770,5 +781,17 @@
         </div>
       </section>
     </div>
+
+  <script>
+    function logout(){
+      axios.post('/logout')
+      .then(function (response) {
+        console.log(response.data);
+      })
+      .catch(function (error) {
+        console.error(error);
+      });
+    }
+  </script>
   </body>
 </html>

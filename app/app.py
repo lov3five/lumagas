@@ -1,24 +1,103 @@
 import os
-
-from flask import (Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for)
+from functools import wraps
+from flask import Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for, session
 from werkzeug.utils import secure_filename
-app = Flask(__name__, static_url_path='/static')
+from dotenv import load_dotenv
+load_dotenv()
 
+app = Flask(__name__, static_url_path='/static')
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+app.secret_key = SECRET_KEY
 # IMPORT DB SERVICE
 from db.service import *
 
 # Lấy đường dẫn gốc của dự án
 project_root = os.path.dirname(os.path.abspath(__file__))
 
+
+# API login
+
+# Decorator để kiểm tra xem người dùng đã đăng nhập hay chưa
+def login_required(route_func):
+    @wraps(route_func)
+    def decorated_route(*args, **kwargs):
+        if 'logged_in' in session:
+            # Người dùng đã đăng nhập, cho phép truy cập route
+            return route_func(*args, **kwargs)
+        else:
+            # Người dùng chưa đăng nhập, chuyển hướng về trang đăng nhập
+            return redirect(url_for('login'))
+    return decorated_route
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Route cho trang đăng nhập
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        # Trang đăng nhập
+        return render_template('login.html')
+    
+    if request.method == 'POST':
+        # Dữ liệu người dùng
+        users = [
+            {
+                'username': 'admin',
+                'password': 'admin'
+            },
+            {
+                'username': 'luong.tt',
+                'password': '12345'
+            }
+        ]
+
+        # Kiểm tra thông tin đăng nhập
+        request_data = request.get_json()
+
+        # Kiểm tra dữ liệu đầu vào
+        if 'account' not in request_data or 'password' not in request_data:
+            return jsonify({'result': 'Thiếu thông tin đăng nhập'}), 400
+
+        username = request_data['account']
+        password = request_data['password']
+
+        # Kiểm tra xem thông tin đăng nhập có hợp lệ hay không
+        for user in users:
+            if user['username'] == username and user['password'] == password:
+                # Đăng nhập thành công
+                session['logged_in'] = True
+                print(session)
+                return redirect('/')
+        
+        return jsonify({'result': "Tài khoản hoặc mật khẩu sai!!!"})
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    if 'logged_in' in session:
+        session['logged_in'] = False
+        return redirect(url_for('login'))
+    else:
+        return jsonify({'result': 'Người dùng chưa đăng nhập'})
+
+# GET homepage LUMAGAS
+@app.route('/')
+@login_required
+def index():
+    return render_template('index.html')
+
 #TEST
 @app.route('/api/test', methods=['GET'])
 def hello():
     return jsonify({'message': 'Hello, world!'})
 
-# GET homepage LUMAGAS
-@app.route('/')
-def index():
-    return render_template('index.html')
+
 
 # TEST API
 """ GET """
@@ -493,13 +572,4 @@ def download_file(filename):
     else:
         return jsonify({'result': 'File not found'}), 404
     
-# API login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if request.form['username'] != 'admin' or request.form['password'] != '123456':
-            error = 'Sai tên đăng nhập hoặc mật khẩu'
-        else:
-            return redirect(url_for('index'))
-    return render_template('login.html', error=error)
+
