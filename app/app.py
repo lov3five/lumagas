@@ -465,7 +465,7 @@ def get_best_schedule():
     print(room_time_used_pairs)
     
     # Tìm các cặp phòng, time chưa được sử dụng
-    room_time_available_pairs = [(pair, get_capacity_by_room_id(pair[0])) for pair in room_time_pairs if pair not in room_time_used_pairs]
+    room_time_available_pairs = [(pair ,get_capacity_by_room_id(pair[0])) for pair in room_time_pairs if pair not in room_time_used_pairs]
     print('Số lượng phòng và time chưa được sử dụng: ', len(room_time_available_pairs))
     
 
