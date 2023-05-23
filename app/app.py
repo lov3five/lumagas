@@ -395,13 +395,11 @@ from datetime import datetime as dt
 def get_best_schedule():
     result = get_list_classes_for_export_schedule_best()
     schedule = []
-    number_conflict = 0
     for i in range(len(result)):
         is_conflict = False
         type_conflict = ''
         # Kiểm tra sức chứa
         if result[i][6] > result[i][8]:
-            number_conflict += 1
             type_conflict = 'xdSucChua'
             is_conflict = True
 
@@ -409,17 +407,14 @@ def get_best_schedule():
             # Tại cùng 1 thời gian học
             if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
                 if result[i][7] == result[j][7]:
-                    number_conflict += 1
                     type_conflict = 'xdPhongHoc'
                     is_conflict = True
                 # 1 giảng viên dạy 2 lớp
                 if result[i][2] == result[j][2]:
-                    number_conflict += 1
                     type_conflict = 'xdGiangVien'
                     is_conflict = True
                 # 1 lớp học 2 môn
                 if result[i][4] == result[j][4]:
-                    number_conflict += 1
                     type_conflict = 'xdLopHoc'
                     is_conflict = True
                 
@@ -439,6 +434,11 @@ def get_best_schedule():
             'coXungDot': is_conflict,
             'loaiXungDot': type_conflict
         })
+    
+    number_conflict = 0
+    for i in range(len(schedule)):
+        if schedule[i]['coXungDot'] == True:
+            number_conflict += 1
     
     all_rooms = get_list_rooms()
     all_timelessons = get_list_timelessons()
@@ -465,171 +465,12 @@ def get_best_schedule():
     print(room_time_used_pairs)
     
     # Tìm các cặp phòng, time chưa được sử dụng
-    room_time_available_pairs = [pair for pair in room_time_pairs if pair not in room_time_used_pairs]
+    room_time_available_pairs = [(pair, get_capacity_by_room_id(pair[0])) for pair in room_time_pairs if pair not in room_time_used_pairs]
     print('Số lượng phòng và time chưa được sử dụng: ', len(room_time_available_pairs))
     
-    # Xử lý loại xung đột và thay thế phòng, time
-    number_conflict_adapter = 0
-    schedule_adapter = []
-    for i in range(len(schedule)):
-        if schedule[i]['coXungDot']:
-            if schedule[i]['loaiXungDot'] == 'xdSucChua':
-                # Xung đột sức chứa, tìm phòng có sức chứa hợp lý và tại thời điểm đó không được sử dụng
-                suitable_room = None
-                for room, time in room_time_available_pairs:
-                    if time == schedule[i]['maUUID'] and get_capacity_by_room_name(room) >= schedule[i]['soLuongSinhVien']:
-                        suitable_room = room
-                        break
-                if suitable_room:
-                    # Thay thế phòng và đánh dấu loại xung đột là False
-                    schedule[i]['tenPhongHoc'] = suitable_room
-                    schedule[i]['coXungDot'] = False
-                    schedule[i]['loaiXungDot'] = ''
-                    schedule[i]['sucChua'] = get_capacity_by_room_name(suitable_room)
-            elif schedule[i]['loaiXungDot'] == 'xdPhongHoc':
-                # Xung đột phòng học, tìm phòng trống tại cùng thời điểm học
-                suitable_room = None
-                for room, time in room_time_available_pairs:
-                    if time == schedule[i]['maUUID']:
-                        suitable_room = room
-                        break
-                if suitable_room:
-                    # Thay thế phòng và đánh dấu loại xung đột là False
-                    schedule[i]['tenPhongHoc'] = suitable_room
-                    schedule[i]['coXungDot'] = False
-                    schedule[i]['loaiXungDot'] = ''
-                    schedule[i]['sucChua'] = get_capacity_by_room_name(suitable_room)
-            elif schedule[i]['loaiXungDot'] == 'xdGiangVien':
-                # Xung đột giảng viên, tìm thời điểm trống cho giảng viên dạy
-                suitable_time = None
-                for room, time in room_time_available_pairs:
-                    if room == schedule[i]['tenPhongHoc']:
-                        suitable_time = time
-                        break
-                if suitable_time:
-                    # Thay thế thời gian học và đánh dấu loại xung đột là False
-                    schedule[i]['maUUID'] = suitable_time
-                    schedule[i]['coXungDot'] = False
-                    schedule[i]['loaiXungDot'] = ''
-            elif schedule[i]['loaiXungDot'] == 'xdLopHoc':
-            # Xung đột lớp học, tìm phòng và thời gian học trống
-                suitable_room = None
-                suitable_time = None
-            for room, time in room_time_available_pairs:
-                if get_capacity_by_room_name(room) >= schedule[i]['soLuongSinhVien']:
-                    suitable_room = room
-                    suitable_time = time
-                    break
-            if suitable_room and suitable_time:
-            # Thay thế phòng, thời gian học và đánh dấu loại xung đột là False
-                schedule[i]['tenPhongHoc'] = suitable_room
-                schedule[i]['maUUID'] = suitable_time
-                schedule[i]['coXungDot'] = False
-                schedule[i]['loaiXungDot'] = ''
-                schedule[i]['sucChua'] = get_capacity_by_room_name(suitable_room)
-            
-        schedule_adapter.append({
-            'maLopHocPhan': schedule[i]['maLopHocPhan'],
-            'tenLopHoc': schedule[i]['tenLopHoc'],
-            'maGiangVien': schedule[i]['maGiangVien'],
-            'tenGiangVien': schedule[i]['tenGiangVien'],
-            'maMonHoc':     schedule[i]['maMonHoc'],
-            'tenMonHoc': schedule[i]['tenMonHoc'],
-            'soLuongSinhVien': schedule[i]['soLuongSinhVien'],
-            'tenPhongHoc': schedule[i]['tenPhongHoc'],
-            'sucChua': schedule[i]['sucChua'],
-            'loaiPhong': schedule[i]['loaiPhong'],
-            'maUUID': schedule[i]['maUUID'],
-            'thoiGianHoc': schedule[i]['thoiGianHoc'],
-            'coXungDot': schedule[i]['coXungDot'],
-            'loaiXungDot': schedule[i]['loaiXungDot'],
-        })
-    # is_conflict = False
-    #     type_conflict = ''
-    #     # Kiểm tra sức chứa
-    #     if result[i][6] > result[i][8]:
-    #         number_conflict += 1
-    #         type_conflict = 'xdSucChua'
-    #         is_conflict = True
 
-    #     for j in range(i+1, len(result)):
-    #         # Tại cùng 1 thời gian học
-    #         if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
-    #             if result[i][7] == result[j][7]:
-    #                 number_conflict += 1
-    #                 type_conflict = 'xdPhongHoc'
-    #                 is_conflict = True
-    #             # 1 giảng viên dạy 2 lớp
-    #             if result[i][2] == result[j][2]:
-    #                 number_conflict += 1
-    #                 type_conflict = 'xdGiangVien'
-    #                 is_conflict = True
-    #             # 1 lớp học 2 môn
-    #             if result[i][4] == result[j][4]:
-    #                 number_conflict += 1
-    #                 type_conflict = 'xdLopHoc'
-    #                 is_conflict = True
-    schedule_final = []
-    for i in range(len(schedule_adapter)):
-        is_conflict_adapter = False
-        type_conflict_adapter = ''
-        
-        # Kiểm tra sức chứa
-        if schedule_adapter[i]['soLuongSinhVien'] > schedule_adapter[i]['sucChua']:
-            number_conflict_adapter += 1
-            type_conflict_adapter = 'xdSucChua'
-            is_conflict_adapter = True
-            print('Xung đột sức chứa', schedule_adapter[i]['maLopHocPhan'])
-        
-        for j in range(i+1, len(schedule_adapter)):
-            # Tại cùng 1 thời gian học
-            if schedule_adapter[i]['maUUID'] == schedule_adapter[j]['maUUID'] and schedule_adapter[i]['maLopHocPhan'] != schedule_adapter[j]['maLopHocPhan']:
-                if schedule_adapter[i]['tenPhongHoc'] == schedule_adapter[j]['tenPhongHoc']:
-                    number_conflict_adapter += 1
-                    type_conflict_adapter = 'xdPhongHoc'
-                    is_conflict_adapter = True
-                # 1 giảng viên dạy 2 lớp
-                if schedule_adapter[i]['maGiangVien'] == schedule_adapter[j]['maGiangVien']:
-                    number_conflict_adapter += 1
-                    type_conflict_adapter = 'xdGiangVien'
-                    is_conflict_adapter = True
-                # 1 lớp học 2 môn
-                if schedule_adapter[i]['tenLopHoc'] == schedule_adapter[j]['tenLopHoc']:
-                    number_conflict_adapter += 1
-                    type_conflict_adapter = 'xdLopHoc'
-                    is_conflict_adapter = True
-        schedule_final.append({
-            'maLopHocPhan': schedule_adapter[i]['maLopHocPhan'],
-            'tenLopHoc': schedule_adapter[i]['tenLopHoc'],
-            'maGiangVien': schedule_adapter[i]['maGiangVien'],
-            'tenGiangVien': schedule_adapter[i]['tenGiangVien'],
-            'maMonHoc':     schedule_adapter[i]['maMonHoc'],
-            'tenMonHoc': schedule_adapter[i]['tenMonHoc'],
-            'soLuongSinhVien': schedule_adapter[i]['soLuongSinhVien'],
-            'tenPhongHoc': schedule_adapter[i]['tenPhongHoc'],
-            'sucChua': schedule_adapter[i]['sucChua'],
-            'loaiPhong': schedule_adapter[i]['loaiPhong'],
-            'maUUID': schedule_adapter[i]['maUUID'],
-            'thoiGianHoc': schedule_adapter[i]['thoiGianHoc'],
-            'coXungDot': is_conflict_adapter,
-            'loaiXungDot': type_conflict_adapter,
-        })
-            
-        
-    # Các cặp phòng, time đã được sử dụng
-    room_time_used_pairs = []
-    for i in range(len(schedule_adapter)):
-        if schedule_adapter[i]['coXungDot'] == False:
-            room_time_used_pairs.append((schedule_adapter[i]['tenPhongHoc'], schedule_adapter[i]['maUUID']))
-                
-    print('Số lượng phòng và time đã được sử dụng sau khi chạy adapter: ', len(room_time_used_pairs))
-    print(room_time_used_pairs)
     
-    # Tìm các cặp phòng, time chưa được sử dụng
-    room_time_available_pairs = [pair for pair in room_time_pairs if pair not in room_time_used_pairs]
-    print('Số lượng phòng và time chưa được sử dụng sau khi chạy adapter: ', len(room_time_available_pairs))
-    
-    return jsonify({'result': schedule_final, 'soLuongXungDot': number_conflict_adapter})
+    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict, 'taiNguyenChuaDuocSuDung': room_time_available_pairs}), 200
 
 # API get schedule by tenLopHoc
 @app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
