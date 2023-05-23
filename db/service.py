@@ -307,6 +307,16 @@ def delete_all_room():
         print('Error: ' + str(e))
     mydb.commit()
     print(mycursor.rowcount, "record(s) deleted from ROOMS")
+    
+def get_capacity_by_room_id(room_id):
+    try:
+        sql = "SELECT capacity FROM rooms WHERE name = %s"
+        val = (room_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult[0][0]
+    except Exception as e:
+        print('Error: ' + str(e))
 
 # TIMELESSONS
 def get_list_timelessons():

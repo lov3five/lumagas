@@ -228,17 +228,14 @@ def run_genetic_algorithm():
             time.sleep(1)
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
-        for schedule in best_schedule:
-            list_conflict_of_schedule = []
-            list_fitness_of_schedule = []
-            list_conflict_of_schedule.append(schedule.get_conflict())
-            list_fitness_of_schedule.append(schedule.get_fitness())
+
 
         x = PrettyTable()
         x.field_names = ["Schedule ID", "Conflict", "Fitness"]
-        for i in range(0, len(list_conflict_of_schedule)):
-            x.add_row([i, list_conflict_of_schedule[i], list_fitness_of_schedule[i]])
+        x.add_row([get_schedule_id_newest(), best_schedule[0].get_conflict(), best_schedule[0].get_fitness()])
         print(x)
+        
+        
 
         print("Best schedule: ", best_schedule[0])
         
@@ -398,32 +395,27 @@ from datetime import datetime as dt
 def get_best_schedule():
     result = get_list_classes_for_export_schedule_best()
     schedule = []
-    number_conflict = 0
     for i in range(len(result)):
         is_conflict = False
         type_conflict = ''
         # Kiểm tra sức chứa
         if result[i][6] > result[i][8]:
-            number_conflict += 1
-            type_conflict = 'Xung đột sức chứa'
+            type_conflict = 'xdSucChua'
             is_conflict = True
 
         for j in range(i+1, len(result)):
             # Tại cùng 1 thời gian học
             if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
                 if result[i][7] == result[j][7]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột phòng học'
+                    type_conflict = 'xdPhongHoc'
                     is_conflict = True
                 # 1 giảng viên dạy 2 lớp
                 if result[i][2] == result[j][2]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột giảng viên'
+                    type_conflict = 'xdGiangVien'
                     is_conflict = True
                 # 1 lớp học 2 môn
                 if result[i][4] == result[j][4]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột môn học'
+                    type_conflict = 'xdLopHoc'
                     is_conflict = True
                 
         schedule.append({
@@ -442,7 +434,43 @@ def get_best_schedule():
             'coXungDot': is_conflict,
             'loaiXungDot': type_conflict
         })
-    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict}), 200
+    
+    number_conflict = 0
+    for i in range(len(schedule)):
+        if schedule[i]['coXungDot'] == True:
+            number_conflict += 1
+    
+    all_rooms = get_list_rooms()
+    all_timelessons = get_list_timelessons()
+    print(all_rooms)
+    
+    all_rooms_name = []
+    for i in range(len(all_rooms)):
+        all_rooms_name.append(all_rooms[i][1])
+        
+    all_timelessons_uuid = []
+    for i in range(len(all_timelessons)):
+        all_timelessons_uuid.append(all_timelessons[i][1])
+    
+    # Tạo danh sách các cặp phòng, time
+    room_time_pairs = [(room, time) for room in all_rooms_name for time in all_timelessons_uuid]
+        
+    # Các cặp phòng, time đã được sử dụng
+    room_time_used_pairs = []
+    for i in range(len(schedule)):
+        if schedule[i]['coXungDot'] == False:
+            room_time_used_pairs.append((schedule[i]['tenPhongHoc'], schedule[i]['maUUID']))
+    
+    print('Số lượng phòng và time đã được sử dụng: ', len(room_time_used_pairs))
+    print(room_time_used_pairs)
+    
+    # Tìm các cặp phòng, time chưa được sử dụng
+    room_time_available_pairs = [(pair ,get_capacity_by_room_id(pair[0])) for pair in room_time_pairs if pair not in room_time_used_pairs]
+    print('Số lượng phòng và time chưa được sử dụng: ', len(room_time_available_pairs))
+    
+
+    
+    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict, 'taiNguyenChuaDuocSuDung': room_time_available_pairs}), 200
 
 # API get schedule by tenLopHoc
 @app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
