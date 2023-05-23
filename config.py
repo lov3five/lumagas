@@ -4,7 +4,7 @@ DB_USER='root'
 DB_PASSWORD='admin'
 
 
-TIME_STOP_GA = 100 # seconds
+TIME_STOP_GA = 1800 # seconds
 
 UNCHANGED_CONFLICT_COUNT = 100 # number of unchanged conflict count to stop GA
 
