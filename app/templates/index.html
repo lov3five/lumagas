@@ -114,9 +114,13 @@
         
   }">
   <div>
-    <div class="card">
+    <div class="card absolute top-0 left-2 flex flex-col ">
       <div class="card-content">
-        <img src="/app/static/user-solid.svg" alt="Admin" class="card-image">
+        <div class="card-image">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
         <h3 class="card-name">Admin</h3>
       </div>
       <div id="logoutButton" class="card-action">
@@ -595,16 +599,17 @@
                       </tr>
                     </thead>
                     <tbody>
+                      
                     <template x-for="(item, index) in resource" :key="index">
                       <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4" x-text="index + 1"></td>
-                        <td class="px-6 py-4" x-text="resource[index][0][0]">
+                        <td class="px-6 py-4" x-text="index ? index + 1:''"></td>
+                        <td class="px-6 py-4" x-text="resource? resource[index][0][0]:''">
                           </th>
-                        <td class="px-6 py-4" x-text="resource[index][1]"></td>
-                        <td class="px-6 py-4" x-text="resource[index][0][1]"></td>
+                        <td class="px-6 py-4" x-text="resource ? resource[index][1]:''"></td>
+                        <td class="px-6 py-4" x-text="resource ? resource[index][0][1]:''"></td>
                       </tr>
-                      </tbody>
                     </template>
+                  </tbody>
                   </table>
                   
                 </div>
