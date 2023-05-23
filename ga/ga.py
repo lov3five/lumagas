@@ -164,7 +164,7 @@ class GA:
     def crossover_multi_point(self, parent1, parent2):
         #Multi-point Crossover
         schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
-        num_points = 40
+        num_points = 5
         points = sorted(random.sample(range(len(schedule_crossover.get_classes())), num_points))
         index = 0
         for i in range (0,len(schedule_crossover.get_classes())):
@@ -185,24 +185,7 @@ class GA:
                 individual.get_classes()[i] = schedule_mutate.get_classes()[i]
         return individual
 
-    def hill_climbing_mutation(self, individual):
-        best_individual = individual
-        best_fitness = individual.get_fitness()
     
-        # Khởi tạo các thay đổi
-        mutations = [(i, j) for i in range(len(individual.get_classes())) for j in range(len(individual.get_classes()))]
-    
-        while mutations:
-            mutated_individual = individual
-            i, j = mutations.pop(random.randrange(len(mutations)))
-            mutated_individual.get_classes()[i], mutated_individual.get_classes()[j] = mutated_individual.get_classes()[j], mutated_individual.get_classes()[i]
-        
-            mutated_fitness = mutated_individual.get_fitness()
-        
-            if mutated_fitness > best_fitness:
-                best_individual = mutated_individual
-                best_fitness = mutated_fitness
-        return best_individual
     
     def run(self, num_generations, start_time):
         # Đếm thời gian chạy

@@ -111,15 +111,10 @@
         
   }">
     <div>
-      <div class="card">
-        <div class="card-content">
-          <img src="/app/static/user-solid.svg" alt="Admin" class="card-image">
-          <h3 class="card-name">Admin</h3>
-        </div>
-        <div id="logoutButton" class="card-action">
-          <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</button>
-        </div>
+      <div id="logoutButton" class="absolute top-0 left-0 mt-4 ml-4">
+        <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</button>
       </div>
+      
       <div
         @click="isOpen5 = true"
         class="absolute flex justify-center items-center cursor-pointer rounded-bl-[5rem] pt-4 top-0 right-0 translate-y-[-48px] bg-green-500 w-[150px] h-[150px] font-bold">
