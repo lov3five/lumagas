@@ -195,13 +195,14 @@ def get_list_classes_for_export_schedule_best():
         
 def get_list_classes_by_classroom_id(classroom_id):
     try:
+        schedule_id = get_schedule_id_newest()
         sql = sql = """SELECT c2.name, c2.classroom_id, c2.instructor_id , c2.instructor_name , c2.subject_id , c2.subject_name , c2.max_number_of_students , r.name , r.capacity, r.`type` , t.uuid , t.period 
                 FROM classes c
                 JOIN courses c2 on c.course_id = c2.id 
                 JOIN rooms r on c.room_id = r.id 
                 JOIN timelessons t on c.timelesson_id = t.id
-                WHERE c2.classroom_id = %s"""
-        val = (classroom_id,)
+                WHERE c2.classroom_id = %s and c.schedule_id = %s"""
+        val = (classroom_id, schedule_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         return myresult
@@ -210,13 +211,15 @@ def get_list_classes_by_classroom_id(classroom_id):
         
 def get_list_classes_by_instructor_id(instructor_id):
     try:
+        schedule_id = get_schedule_id_newest()
         sql = sql = """SELECT c2.name, c2.classroom_id, c2.instructor_id , c2.instructor_name , c2.subject_id , c2.subject_name , c2.max_number_of_students , r.name , r.capacity, r.`type` , t.uuid , t.period 
                 FROM classes c
                 JOIN courses c2 on c.course_id = c2.id 
                 JOIN rooms r on c.room_id = r.id 
                 JOIN timelessons t on c.timelesson_id = t.id
-                WHERE c2.instructor_id = %s"""
-        val = (instructor_id,)
+                WHERE c2.instructor_id = %s and c.schedule_id = %s
+                """
+        val = (instructor_id, schedule_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         return myresult
