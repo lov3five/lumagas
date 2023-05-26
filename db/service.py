@@ -232,6 +232,36 @@ def get_room_id_from_list_classes():
     except Exception as e:
         print('Error: ' + str(e))
         
+def get_list_classroom_newest():
+    try:
+        schedule_id = get_schedule_id_newest()
+        sql = """SELECT c2.classroom_id 
+                FROM classes c 
+                JOIN courses c2 ON c.course_id = c2.id 
+                WHERE c.schedule_id = %s
+                GROUP BY c2.classroom_id"""
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
+def get_list_instructor_newest():
+    try:
+        schedule_id = get_schedule_id_newest()
+        sql = """SELECT c2.instructor_id 
+                FROM classes c 
+                JOIN courses c2 ON c.course_id = c2.id 
+                WHERE c.schedule_id = %s
+                GROUP BY c2.instructor_id """
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
 
 
 # SCHEDULES
@@ -307,6 +337,16 @@ def delete_all_room():
         print('Error: ' + str(e))
     mydb.commit()
     print(mycursor.rowcount, "record(s) deleted from ROOMS")
+    
+def get_capacity_by_room_id(room_id):
+    try:
+        sql = "SELECT capacity FROM rooms WHERE name = %s"
+        val = (room_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult[0][0]
+    except Exception as e:
+        print('Error: ' + str(e))
 
 # TIMELESSONS
 def get_list_timelessons():

@@ -1,24 +1,102 @@
 import os
-
-from flask import (Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for)
+from functools import wraps
+from flask import Flask, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for, session
 from werkzeug.utils import secure_filename
-app = Flask(__name__, static_url_path='/static')
+from dotenv import load_dotenv
+load_dotenv()
 
+app = Flask(__name__, static_url_path='/static')
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+app.secret_key = SECRET_KEY
 # IMPORT DB SERVICE
 from db.service import *
 
 # Lấy đường dẫn gốc của dự án
 project_root = os.path.dirname(os.path.abspath(__file__))
 
+
+# API login
+
+# Decorator để kiểm tra xem người dùng đã đăng nhập hay chưa
+def login_required(route_func):
+    @wraps(route_func)
+    def decorated_route(*args, **kwargs):
+        if 'logged_in' in session:
+            # Người dùng đã đăng nhập, cho phép truy cập route
+            return route_func(*args, **kwargs)
+        else:
+            # Người dùng chưa đăng nhập, chuyển hướng về trang đăng nhập
+            return redirect(url_for('login'))
+    return decorated_route
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('logged_in') is None:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Route cho trang đăng nhập
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        # Trang đăng nhập
+        return render_template('login.html')
+    
+    if request.method == 'POST':
+        # Dữ liệu người dùng
+        users = [
+            {
+                'username': 'admin',
+                'password': 'admin'
+            },
+            {
+                'username': 'luong.tt',
+                'password': '12345'
+            }
+        ]
+
+        # Kiểm tra thông tin đăng nhập
+        request_data = request.get_json()
+
+        # Kiểm tra dữ liệu đầu vào
+        if 'account' not in request_data or 'password' not in request_data:
+            return jsonify({'result': 'Thiếu thông tin đăng nhập'}), 400
+
+        username = request_data['account']
+        password = request_data['password']
+
+        # Kiểm tra xem thông tin đăng nhập có hợp lệ hay không
+        for user in users:
+            if user['username'] == username and user['password'] == password:
+                # Đăng nhập thành công
+                session['logged_in'] = True
+                return jsonify({'result': 'success', 'message': 'Đăng nhập thành công'}), 200
+        
+        return jsonify({'result': "failed", 'message': 'Thông tin đăng nhập không hợp lệ'}), 400
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    if 'logged_in' in session:
+        # Xóa trạng thái đăng nhập từ session
+        session.pop('logged_in', None)
+        return jsonify({'result': 'success','message': 'Đăng xuất thành công'}), 200
+
+    else:
+        return jsonify({'result': 'failed','message': 'Người dùng chưa đăng nhập'}), 200
+
+# GET homepage LUMAGAS
+@app.route('/')
+@login_required
+def index():
+    return render_template('index.html')
+
 #TEST
 @app.route('/api/test', methods=['GET'])
 def hello():
     return jsonify({'message': 'Hello, world!'})
-
-# GET homepage LUMAGAS
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 # TEST API
 """ GET """
@@ -148,17 +226,14 @@ def run_genetic_algorithm():
             time.sleep(1)
         # Lấy ra kết quả tốt nhất
         best_schedule = ga.get_population()
-        for schedule in best_schedule:
-            list_conflict_of_schedule = []
-            list_fitness_of_schedule = []
-            list_conflict_of_schedule.append(schedule.get_conflict())
-            list_fitness_of_schedule.append(schedule.get_fitness())
+
 
         x = PrettyTable()
         x.field_names = ["Schedule ID", "Conflict", "Fitness"]
-        for i in range(0, len(list_conflict_of_schedule)):
-            x.add_row([i, list_conflict_of_schedule[i], list_fitness_of_schedule[i]])
+        x.add_row([get_schedule_id_newest(), best_schedule[0].get_conflict(), best_schedule[0].get_fitness()])
         print(x)
+        
+        
 
         print("Best schedule: ", best_schedule[0])
         
@@ -166,12 +241,12 @@ def run_genetic_algorithm():
         #sound_notification()
         population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
         print('Best schedule fitness: ', population_result[0].get_fitness())
-        display_result(population_result)
+        print(display_result(population_result))
         # Lưu những kết quả tốt nhất vào database
         # Lưu schedule vào database
         # Lấy những thông tin cần lưu
-        fitness = population_result[0].get_fitness()
-        conflict = population_result[0].get_conflict()
+        fitness = best_schedule[0].get_fitness()
+        conflict = best_schedule[0].get_conflict()
         
         create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
         schedule_id = get_schedule_id_newest()
@@ -190,19 +265,19 @@ def run_genetic_algorithm():
 # API get index input of GA: population size, mutation rate, crossover rate
 @app.route('/api/ga/result-analysis', methods=['GET'])
 def get_result_analysis():
-    result = get_list_schedules_create_nearly()
-    result_analysis = {
-        'scheduleId': result[0][0],
-        'fitness': result[0][1],
-        'runningTime': result[0][2],
-        'populationSize': result[0][3],
-        'mutationRate': result[0][4],
-        'crossoverRate': result[0][5],
-        'conflict': result[0][6],
-        'createdAt': result[0][7]
-    }
-    if result == []:
+    
+    if get_list_schedules_create_nearly() is None:
         return jsonify({'result': 'fail', 'message': 'Không có dữ liệu'}), 400
+    result_analysis = {
+        'scheduleId': get_list_schedules_create_nearly()[0][0],
+        'fitness': get_list_schedules_create_nearly()[0][1],
+        'runningTime': get_list_schedules_create_nearly()[0][2],
+        'populationSize': get_list_schedules_create_nearly()[0][3],
+        'mutationRate': get_list_schedules_create_nearly()[0][4],
+        'crossoverRate': get_list_schedules_create_nearly()[0][5],
+        'conflict': get_list_schedules_create_nearly()[0][6],
+        'createdAt': get_list_schedules_create_nearly()[0][7]
+    }
     
     return jsonify({'result': 'success', 'data': result_analysis}), 200
 
@@ -318,32 +393,27 @@ from datetime import datetime as dt
 def get_best_schedule():
     result = get_list_classes_for_export_schedule_best()
     schedule = []
-    number_conflict = 0
     for i in range(len(result)):
         is_conflict = False
         type_conflict = ''
         # Kiểm tra sức chứa
         if result[i][6] > result[i][8]:
-            number_conflict += 1
-            type_conflict = 'Xung đột sức chứa'
+            type_conflict = 'xdSucChua'
             is_conflict = True
 
         for j in range(i+1, len(result)):
             # Tại cùng 1 thời gian học
             if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
                 if result[i][7] == result[j][7]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột phòng học'
+                    type_conflict = 'xdPhongHoc'
                     is_conflict = True
                 # 1 giảng viên dạy 2 lớp
                 if result[i][2] == result[j][2]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột giảng viên'
+                    type_conflict = 'xdGiangVien'
                     is_conflict = True
                 # 1 lớp học 2 môn
                 if result[i][4] == result[j][4]:
-                    number_conflict += 1
-                    type_conflict = 'Xung đột môn học'
+                    type_conflict = 'xdLopHoc'
                     is_conflict = True
                 
         schedule.append({
@@ -362,7 +432,49 @@ def get_best_schedule():
             'coXungDot': is_conflict,
             'loaiXungDot': type_conflict
         })
-    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict}), 200
+    
+    number_conflict = 0
+    for i in range(len(schedule)):
+        if schedule[i]['coXungDot'] == True:
+            number_conflict += 1
+    
+    all_rooms = get_list_rooms()
+    all_timelessons = get_list_timelessons()
+    print(all_rooms)
+    
+    all_rooms_name = []
+    for i in range(len(all_rooms)):
+        all_rooms_name.append(all_rooms[i][1])
+        
+    all_timelessons_uuid = []
+    for i in range(len(all_timelessons)):
+        all_timelessons_uuid.append(all_timelessons[i][1])
+    
+    # Tạo danh sách các cặp phòng, time
+    room_time_pairs = [(room, time) for room in all_rooms_name for time in all_timelessons_uuid]
+        
+    # Các cặp phòng, time đã được sử dụng
+    room_time_used_pairs = []
+    for i in range(len(schedule)):
+        if schedule[i]['coXungDot'] == False:
+            room_time_used_pairs.append((schedule[i]['tenPhongHoc'], schedule[i]['maUUID']))
+    
+    print('Số lượng phòng và time đã được sử dụng: ', len(room_time_used_pairs))
+    print(room_time_used_pairs)
+    
+    # Tìm các cặp phòng, time chưa được sử dụng
+    room_time_available_pairs = [(pair ,get_capacity_by_room_id(pair[0])) for pair in room_time_pairs if pair not in room_time_used_pairs]
+    print('Số lượng phòng và time chưa được sử dụng: ', len(room_time_available_pairs))
+    
+
+    
+    return jsonify({'result': schedule, 'soLuongXungDot': number_conflict, 'taiNguyenChuaDuocSuDung': room_time_available_pairs}), 200
+
+# API get list classroom
+@app.route('/api/schedule/classroom', methods=['GET'])
+def get_list_classroom_api():
+    result = get_list_classroom_newest()
+    return jsonify({'result': result}), 200
 
 # API get schedule by tenLopHoc
 @app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
@@ -385,6 +497,12 @@ def get_schedule_by_class_name(classroom_id):
             'thoiGianHoc': result[i][11]
         })
     return jsonify({'result': schedule, 'filter': 'LỚP HỌC'}), 200
+
+# API get list instructor
+@app.route('/api/schedule/instructor', methods=['GET'])
+def get_list_instructor_api():
+    result = get_list_instructor_newest()
+    return jsonify({'result': result}), 200
 
 #API get schedule by maGiangVien
 @app.route('/api/schedule/instructor/<string:instructor_id>', methods=['GET'])
@@ -492,3 +610,5 @@ def download_file(filename):
         return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return jsonify({'result': 'File not found'}), 404
+    
+
