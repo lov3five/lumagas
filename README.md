@@ -80,3 +80,10 @@ Timetable-Generator-GA made with ❤️ by [L-3012](https://github.com/lov3five)
     > Lệnh này sẽ dừng các container và xóa chúng.
 
 ### LUMAGAS UI
+<p align="center">
+  <h3>LOGIN PAGE</h3>
+  <img src="https://github.com/lov3five/lumagas/blob/Luong/ui_img/login_page.PNG"/>
+  </br>
+  <h3>HOMEPAGE</h3>
+  <img src="https://github.com/lov3five/lumagas/blob/Luong/ui_img/app.PNG"/>
+</p>
