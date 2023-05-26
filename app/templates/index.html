@@ -103,7 +103,6 @@
         this.schedules = data.result;
         this.resource = data.taiNguyenChuaDuocSuDung;
         console.log(data.result);
-        alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.');
       } catch (error) {
         console.error(error);
       }
@@ -130,6 +129,7 @@
         
             if (data.result === 'success') {
               this.isOpen3 = false;
+              alert('Chạy thuật toán thành công! - Nhấn OK để hiển thị kết quả.');
               await this.getSchedule();
             }
         
@@ -735,7 +735,9 @@
             </template>
           </select>
         </div>
+        <button class="px-4 py-2 rounded ml-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white" x-on:click="getSchedule()">Hiển thị tất cả</button> <!-- Button "Hiển thị tất cả" -->
       </div>
+      
     </div>
     
     

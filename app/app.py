@@ -482,6 +482,27 @@ def get_schedule_by_class_name(classroom_id):
     result = get_list_classes_by_classroom_id(classroom_id)
     schedule = []
     for i in range(len(result)):
+        is_conflict = False
+        type_conflict = ''
+        # Kiểm tra sức chứa
+        if result[i][6] > result[i][8]:
+            type_conflict = 'xdSucChua'
+            is_conflict = True
+
+        for j in range(i+1, len(result)):
+            # Tại cùng 1 thời gian học
+            if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
+                if result[i][7] == result[j][7]:
+                    type_conflict = 'xdPhongHoc'
+                    is_conflict = True
+                # 1 giảng viên dạy 2 lớp
+                if result[i][2] == result[j][2]:
+                    type_conflict = 'xdGiangVien'
+                    is_conflict = True
+                # 1 lớp học 2 môn
+                if result[i][4] == result[j][4]:
+                    type_conflict = 'xdLopHoc'
+                    is_conflict = True
         schedule.append({
             'maLopHocPhan': result[i][0],
             'tenLopHoc': result[i][1],
@@ -494,7 +515,9 @@ def get_schedule_by_class_name(classroom_id):
             'sucChua': result[i][8],
             'loaiPhong': result[i][9],
             'maUUID': result[i][10],
-            'thoiGianHoc': result[i][11]
+            'thoiGianHoc': result[i][11],
+            'coXungDot': is_conflict,
+            'loaiXungDot': type_conflict
         })
     return jsonify({'result': schedule, 'filter': 'LỚP HỌC'}), 200
 
@@ -510,6 +533,27 @@ def get_schedule_by_instructor_id(instructor_id):
     result = get_list_classes_by_instructor_id(instructor_id)
     schedule = []
     for i in range(len(result)):
+        is_conflict = False
+        type_conflict = ''
+        # Kiểm tra sức chứa
+        if result[i][6] > result[i][8]:
+            type_conflict = 'xdSucChua'
+            is_conflict = True
+
+        for j in range(i+1, len(result)):
+            # Tại cùng 1 thời gian học
+            if result[i][11] == result[j][11] and result[i][0] != result[j][0]:
+                if result[i][7] == result[j][7]:
+                    type_conflict = 'xdPhongHoc'
+                    is_conflict = True
+                # 1 giảng viên dạy 2 lớp
+                if result[i][2] == result[j][2]:
+                    type_conflict = 'xdGiangVien'
+                    is_conflict = True
+                # 1 lớp học 2 môn
+                if result[i][4] == result[j][4]:
+                    type_conflict = 'xdLopHoc'
+                    is_conflict = True
         schedule.append({
             'maLopHocPhan': result[i][0],
             'tenLopHoc': result[i][1],
@@ -522,7 +566,9 @@ def get_schedule_by_instructor_id(instructor_id):
             'sucChua': result[i][8],
             'loaiPhong': result[i][9],
             'maUUID': result[i][10],
-            'thoiGianHoc': result[i][11]
+            'thoiGianHoc': result[i][11],
+            'coXungDot': is_conflict,
+            'loaiXungDot': type_conflict
         })
     return jsonify({'result': schedule, 'filter': 'GIẢNG VIÊN'}), 200
 
