@@ -232,6 +232,36 @@ def get_room_id_from_list_classes():
     except Exception as e:
         print('Error: ' + str(e))
         
+def get_list_classroom_newest():
+    try:
+        schedule_id = get_schedule_id_newest()
+        sql = """SELECT c2.classroom_id 
+                FROM classes c 
+                JOIN courses c2 ON c.course_id = c2.id 
+                WHERE c.schedule_id = %s
+                GROUP BY c2.classroom_id"""
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
+def get_list_instructor_newest():
+    try:
+        schedule_id = get_schedule_id_newest()
+        sql = """SELECT c2.instructor_id 
+                FROM classes c 
+                JOIN courses c2 ON c.course_id = c2.id 
+                WHERE c.schedule_id = %s
+                GROUP BY c2.instructor_id """
+        val = (schedule_id,)
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        return myresult
+    except Exception as e:
+        print('Error: ' + str(e))
+        
 
 
 # SCHEDULES
