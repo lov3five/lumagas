@@ -4,9 +4,9 @@ DB_USER='root'
 DB_PASSWORD='admin'
 
 
-TIME_STOP_GA = 1800 # seconds
+TIME_STOP_GA = 3000 # seconds
 
-UNCHANGED_CONFLICT_COUNT = 100 # number of unchanged conflict count to stop GA
+UNCHANGED_CONFLICT_COUNT = 30 # number of unchanged conflict count to stop GA
 
 TOURNAMENT_SIZE = 6 # number of individuals in tournament selection
 

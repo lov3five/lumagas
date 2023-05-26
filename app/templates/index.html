@@ -22,6 +22,8 @@
     resource: '',
     disabled: false,disabled2: false,disabled3: false,
     analysis:{},
+    classrooms: [],
+    lecturers: [],
     value_crossover: 85, value_mutation: 20, value_population_size:20,
     uploadFile: function(route) {
       let fileTemp = this.fileCourse
@@ -55,6 +57,38 @@
         alert(data.result);
       })
     },
+
+    getListInstructor: async function() {
+      try {
+        const response = await fetch('/api/schedule/instructor');
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        const data = await response.json();
+        this.lecturers = data.result || []; // Lưu danh sách giảng viên vào biến lectures
+        return true;
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    },
+
+    getListClassroom: async function() {
+      try {
+        const response = await fetch('/api/schedule/classroom');
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        const data = await response.json();
+        this.classrooms = data.result || []; // Lưu danh sách lớp học vào biến classrooms
+        return true;
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    },
+
+    
     getSchedule: async function() {
       try {
         const response = await fetch('/api/schedule', {
@@ -99,24 +133,70 @@
               await this.getSchedule();
             }
         
-            const analysisResponse = await fetch('/api/ga/result-analysis', { method: 'GET' });
-        
+            // Gọi hàm getListInstructor để lấy danh sách giảng viên
+            await this.getListInstructor()
+
+            // Gọi hàm getListClassroom để lấy danh sách lớp học
+            await this.getListClassroom()
+      
+            // Tiếp tục thực hiện các bước khác sau khi gọi hai hàm thành công
+            const analysisResponse = await fetch('/api/ga/result-analysis', {
+              method: 'GET'
+            });
+      
             if (!analysisResponse.ok) {
               throw new Error(analysisResponse.statusText);
             }
-        
+      
             const data1 = await analysisResponse.json();
             this.analysis = data1.data;
           } catch (error) {
             console.error(error);
           }
-        }
+        },
+
+        getScheduleByInstructorId: async function(instructorId) {
+          try {
+            const response = await fetch(`/api/schedule/instructor/${instructorId}`, {
+              method: 'GET',
+            });
         
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+        
+            const data = await response.json();
+            this.schedules = data.result;
+          } catch (error) {
+            console.error(error);
+          }
+        },
+
+        getScheduleByClassroomId: async function(classroomId) {
+          try {
+            const response = await fetch(`/api/schedule/classroom/${classroomId}`, {
+              method: 'GET',
+            });
+        
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+        
+            const data = await response.json();
+            this.schedules = data.result;
+          } catch (error) {
+            console.error(error);
+          }
+        },
   }">
   <div>
-    <div class="card">
-      <div class="card-content">
-        <img src="/app/static/user-solid.svg" alt="Admin" class="card-image">
+    <div class="card absolute top-0 left-2 flex flex-col ">
+      <div class="card-content text-center">
+        <div class="card-image">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
         <h3 class="card-name">Admin</h3>
       </div>
       <div id="logoutButton" class="card-action">
@@ -399,7 +479,7 @@
                       <span class="text-gray-500 sm:text-sm">#</span>
                     </div>
                     <input x-model="value_population_size"
-                      x-on:input="value_population_size = Math.min(1000,parseInt($event.target.value))" type="number"
+                      x-on:input="value_population_size = Math.min(3000,parseInt($event.target.value))" type="number"
                       name="population" id="population"
                       class="block w-full rounded-md border-0 py-1.5 pl-10 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                       placeholder="Vui lòng nhập số lượng cá thể:" min="0" />
@@ -595,16 +675,17 @@
                       </tr>
                     </thead>
                     <tbody>
+                      
                     <template x-for="(item, index) in resource" :key="index">
                       <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" x-text="index + 1"></td>
-                        <td class="px-6 py-4" x-text="resource[index][0][0]">
+                        <td class="px-6 py-4" x-text="resource? resource[index][0][0]:''">
                           </th>
-                        <td class="px-6 py-4" x-text="resource[index][1]"></td>
-                        <td class="px-6 py-4" x-text="resource[index][0][1]"></td>
+                        <td class="px-6 py-4" x-text="resource ? resource[index][1]:''"></td>
+                        <td class="px-6 py-4" x-text="resource ? resource[index][0][1]:''"></td>
                       </tr>
-                      </tbody>
                     </template>
+                  </tbody>
                   </table>
                   
                 </div>
@@ -634,6 +715,31 @@
         Export excel
       </a>
     </div>
+    <div class="flex justify-between mt-5 mr-5">
+      <div></div>
+      <div class="flex items-center">
+        <div class="mr-4">
+          <label for="classFilter" class="mr-2">Lọc theo Lớp học:</label>
+          <select id="classFilter" class="px-2 py-1 border border-gray-300 rounded" x-data x-on:change="getScheduleByClassroomId($event.target.value)">
+            <template x-for="classroom in classrooms">
+              <option x-text="classroom" x-bind:value="classroom"></option>
+            </template>
+          </select>
+        </div>
+    
+        <div>
+          <label for="lecturerFilter" class="mr-2">Lọc theo Giảng viên:</label>
+          <select id="lecturerFilter" class="px-2 py-1 border border-gray-300 rounded" x-data x-on:change="getScheduleByInstructorId($event.target.value)">
+            <template x-for="lecturer in lecturers">
+              <option x-text="lecturer" x-bind:value="lecturer"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    
+    
     <section>
       <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-sm text-left text-gray-500">
@@ -643,6 +749,7 @@
               <th scope="col" class="px-6 py-3">Tên học phần</th>
               <th scope="col" class="px-6 py-3">Lớp</th>
               <th scope="col" class="px-6 py-3">Số lượng sinh viên</th>
+              <th scope="col" class="px-6 py-3">Mã giảng viên</th>
               <th scope="col" class="px-6 py-3">Giảng viên</th>
               <th scope="col" class="px-6 py-3">Phòng</th>
               <th scope="col" class="px-6 py-3">Sức chứa</th>
@@ -661,6 +768,7 @@
                 <td class="px-6 py-4" x-text="item.tenMonHoc"></td>
                 <td class="px-6 py-4" x-text="item.tenLopHoc"></td>
                 <td class="px-6 py-4" x-text="item.soLuongSinhVien"></td>
+                <td class="px-6 py-4" x-text="item.maGiangVien"></td>
                 <td class="px-6 py-4" x-text="item.tenGiangVien"></td>
                 <td class="px-6 py-4" x-text="item.tenPhongHoc"></td>
                 <td class="px-6 py-4" x-text="item.sucChua"></td>
@@ -692,6 +800,8 @@
           console.error(error);
         });
     }
+
+    
   </script>
 </body>
 

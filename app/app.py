@@ -98,8 +98,6 @@ def index():
 def hello():
     return jsonify({'message': 'Hello, world!'})
 
-
-
 # TEST API
 """ GET """
 @app.route('/api/data/<string:object>', methods=['GET'])
@@ -243,12 +241,12 @@ def run_genetic_algorithm():
         #sound_notification()
         population_result.sort(key=lambda x: x.get_fitness(), reverse=True)
         print('Best schedule fitness: ', population_result[0].get_fitness())
-        display_result(population_result)
+        print(display_result(population_result))
         # Lưu những kết quả tốt nhất vào database
         # Lưu schedule vào database
         # Lấy những thông tin cần lưu
-        fitness = population_result[0].get_fitness()
-        conflict = population_result[0].get_conflict()
+        fitness = best_schedule[0].get_fitness()
+        conflict = best_schedule[0].get_conflict()
         
         create_new_schedule(fitness, running_time, population_size, mutation_rate, crossover_rate, conflict)
         schedule_id = get_schedule_id_newest()
@@ -472,6 +470,12 @@ def get_best_schedule():
     
     return jsonify({'result': schedule, 'soLuongXungDot': number_conflict, 'taiNguyenChuaDuocSuDung': room_time_available_pairs}), 200
 
+# API get list classroom
+@app.route('/api/schedule/classroom', methods=['GET'])
+def get_list_classroom_api():
+    result = get_list_classroom_newest()
+    return jsonify({'result': result}), 200
+
 # API get schedule by tenLopHoc
 @app.route('/api/schedule/classroom/<string:classroom_id>', methods=['GET'])
 def get_schedule_by_class_name(classroom_id):
@@ -493,6 +497,12 @@ def get_schedule_by_class_name(classroom_id):
             'thoiGianHoc': result[i][11]
         })
     return jsonify({'result': schedule, 'filter': 'LỚP HỌC'}), 200
+
+# API get list instructor
+@app.route('/api/schedule/instructor', methods=['GET'])
+def get_list_instructor_api():
+    result = get_list_instructor_newest()
+    return jsonify({'result': result}), 200
 
 #API get schedule by maGiangVien
 @app.route('/api/schedule/instructor/<string:instructor_id>', methods=['GET'])

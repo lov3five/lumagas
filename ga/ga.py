@@ -5,6 +5,7 @@ import pandas as pd
 import time
 import config
 
+# Hàm tạo dataframe và lưu vào file excel
 def add_dataframe_to_excel(file_path, list_name_column, list_data, new_sheet_name=None):
     """
     Thêm một DataFrame vào một trang tính mới của một tệp Excel đã có các trang tính.
@@ -78,8 +79,6 @@ class GA:
         
     def evolve(self):
         # Biến đếm số thế hệ liên tiếp mà giá trị conflict không thay đổi
-        
-        
         # Sort population by fitness
         self.population.sort(key=lambda x: x.get_fitness(), reverse=True)
         
@@ -99,17 +98,13 @@ class GA:
             print('Số thế hệ không thay đổi conflict: ', self.unchanged_count) 
         else:
             self.unchanged_count = 0
-            
         # Lưu số thế hệ khi conflict không thay đổi
         self.prev_conflict = current_conflict
-        
         # Create new population
         new_population = Population(0).get_schedules()
-        
         # Thêm các cá thể ưu tú vào quần thể mới
         num_elite = int(self.elitism_rate * len(self.population))
         new_population.extend(self.population[:num_elite])
-
         #################
         """ CROSSOVER """
         while len(new_population) < len(self.population):
@@ -120,7 +115,6 @@ class GA:
             else:
                 schedule_crossover = parent1
             new_population.append(schedule_crossover)
-            
         ################
         """ MUTATION """
         for individual in new_population:
@@ -128,8 +122,6 @@ class GA:
                 self.mutate(individual)
         # Update population
         self.population = new_population
-        
-    
     def select_parents(self):
         # Tournament selection
         tournament_size = config.TOURNAMENT_SIZE
@@ -138,7 +130,6 @@ class GA:
         parent1 = tournament[0]
         parent2 = tournament[1]
         return parent1, parent2
-    
     def crossover_uniform(self, parent1, parent2):
         # Uniform Crossover
         schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
@@ -148,8 +139,6 @@ class GA:
             else:
                 schedule_crossover.get_classes()[i] = parent2.get_classes()[i]
         return schedule_crossover
-        
-    
     def crossover_single_point(self, parent1, parent2):
         # Single Point Crossover
         schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
@@ -160,7 +149,6 @@ class GA:
             else:
                 schedule_crossover.get_classes()[i] = parent2.get_classes()[i]
         return schedule_crossover
-    
     def crossover_multi_point(self, parent1, parent2):
         #Multi-point Crossover
         schedule_crossover = Population(1, self.courses, self.rooms, self.timelessons).get_schedules()[0]
@@ -175,7 +163,6 @@ class GA:
             else:
                 schedule_crossover.get_classes()[i] = parent2.get_classes()[i]
         return schedule_crossover
-
 
     # Hàm đột biến
     def mutate(self, individual):
@@ -219,11 +206,10 @@ class GA:
                 self.is_done = True
                 list_conflict = self.list_conflict
                 list_gene = self.list_generation
-                
+                return self.population, list_gene, list_conflict
                 #add_dataframe_to_excel('output.xlsx', ['conflict'], list_conflict, 'Conflict3')
-                break
-            
+        
                 
-        return self.population, list_gene, list_conflict
+        
     
     

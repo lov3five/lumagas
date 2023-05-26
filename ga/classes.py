@@ -5,7 +5,6 @@ class Classes:
         self.room = room
         self.timelesson = timelesson
 
-        
     def get_id(self):
         return self.id
     
